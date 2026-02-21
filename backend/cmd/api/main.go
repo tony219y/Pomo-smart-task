@@ -2,14 +2,24 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v3"
+	"github.com/tony219y/pomo-smart-task-api/config/db"
 	"github.com/tony219y/pomo-smart-task-api/internal/handler"
+	"github.com/tony219y/pomo-smart-task-api/internal/repository"
+	"github.com/tony219y/pomo-smart-task-api/internal/service"
 )
 
 func main() {
 	app := fiber.New()
 
-	api := app.Group("/api/v1")
-	api.Get("/test", handler.GetTest)
+	// connect to database
+	database := db.ConnectNeon()
+	db.Migration(database)
+	testRepo := repository.NewTestRepository(database)
+	testService := service.NewTestService(testRepo)
+	testHandler := handler.NewTestHandler(testService)
 
-	app.Listen(":3000")
+	api := app.Group("/api/v1")
+	api.Get("/test", testHandler.GetTest)
+
+	app.Listen(":8080")
 }
