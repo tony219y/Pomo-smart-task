@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/tony219y/pomo-smart-task-api/internal/middleware"
 	"github.com/tony219y/pomo-smart-task-api/internal/model"
 	"github.com/tony219y/pomo-smart-task-api/internal/repository"
 	"golang.org/x/crypto/bcrypt"
@@ -18,16 +19,20 @@ func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
-func (s *UserService) Login(email, password string) (*model.Users, error) {
+func (s *UserService) Login(email, password string) (string, error) {
 	user, err := s.repo.FindByEmail(email)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return nil, err
+		return "", err
 	}
 	// token jwt
-	return user, nil
+	token, err := middleware.GenerateToken(user.ID, user.Role)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 func (s *UserService) Register(email, username, password string) (*model.Users, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)

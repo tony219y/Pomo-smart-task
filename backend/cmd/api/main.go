@@ -24,12 +24,12 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
-	api := app.Group("/api/v1")
-	api.Get("/test", testHandler.GetTest)
+	auth := app.Group("/api/v1/auth")
+	auth.Post("/register", userHandler.CreateUser)
+	auth.Get("/login", userHandler.UserLogin)
 
+	api := app.Group("/api/v1")
 	//Users
-	api.Post("/register", userHandler.CreateUser)
-	api.Get("/login", userHandler.UserLogin)
 	api.Get("/test", middleware.JWTMiddleware, testHandler.GetTest)
 
 	app.Listen(":8080")

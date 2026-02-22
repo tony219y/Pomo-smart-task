@@ -35,9 +35,11 @@ func (h *UserHandler) UserLogin(c fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	users, err := h.service.Login(req.Email, req.Password)
+	token, err := h.service.Login(req.Email, req.Password)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
-	return c.Status(200).JSON(users)
+	return c.Status(200).JSON(fiber.Map{
+		"token": token,
+	})
 }
