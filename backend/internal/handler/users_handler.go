@@ -43,3 +43,22 @@ func (h *UserHandler) UserLogin(c fiber.Ctx) error {
 		"token": token,
 	})
 }
+
+func (h *UserHandler) GetAllUser(c fiber.Ctx) error {
+
+	roleRaw := c.Locals("role")
+
+	if roleRaw == nil {
+		return c.Status(401).JSON(fiber.Map{"message": "Login required"})
+	}
+
+	role, ok := roleRaw.(string)
+	if !ok || role != "admin" {
+		return c.Status(403).JSON(fiber.Map{"message": "Access denied"})
+	}
+	users, err := h.service.GetAllUser()
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"message": err.Error()})
+	}
+	return c.JSON(users)
+}

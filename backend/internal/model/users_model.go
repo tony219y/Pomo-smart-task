@@ -7,6 +7,12 @@ type Users struct {
 	Username string `gorm:"not null" form:"username"`
 	Password string `gorm:"not null" form:"password"`
 }
+type UserResponse struct {
+	ID       uint   `json:"id"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
+	Username string `json:"username"`
+}
 type RegisterReq struct {
 	Email    string `json:"email"`
 	Username string `json:"username"`

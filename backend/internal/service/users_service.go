@@ -15,10 +15,6 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
-}
 func (s *UserService) Login(email, password string) (string, error) {
 	user, err := s.repo.FindByEmail(email)
 	if err != nil {
@@ -51,4 +47,8 @@ func (s *UserService) Register(email, username, password string) (*model.Users, 
 	}
 
 	return newUser, nil
+}
+
+func (s *UserService) GetAllUser() ([]model.UserResponse, error) {
+	return s.repo.FindAll()
 }

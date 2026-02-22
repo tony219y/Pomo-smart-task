@@ -7,7 +7,6 @@ import (
 
 func Migration(db *gorm.DB) {
 	db.AutoMigrate(
-		&model.TestType{},
 		&model.Users{},
 	)
 }

@@ -9,13 +9,13 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var JWT_SECRET = os.Getenv("JWT_SECRET")
-
 func init() {
 	godotenv.Load()
 }
 
 func JWTMiddleware(c fiber.Ctx) error {
+	JWT_SECRET := os.Getenv("JWT_SECRET")
+
 	authHeader := c.Get("Authorization")
 
 	if authHeader == "" {
@@ -24,7 +24,7 @@ func JWTMiddleware(c fiber.Ctx) error {
 		})
 	}
 	tokenString := authHeader[7:]
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(JWT_SECRET), nil
 	})
 
@@ -40,6 +40,7 @@ func JWTMiddleware(c fiber.Ctx) error {
 }
 
 func GenerateToken(id uint, role string) (string, error) {
+	JWT_SECRET := os.Getenv("JWT_SECRET")
 
 	claims := jwt.MapClaims{
 		"user_id": id,

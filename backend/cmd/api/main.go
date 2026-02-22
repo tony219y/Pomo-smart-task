@@ -16,10 +16,6 @@ func main() {
 	database := db.ConnectNeon()
 	db.Migration(database)
 
-	testRepo := repository.NewTestRepository(database)
-	testService := service.NewTestService(testRepo)
-	testHandler := handler.NewTestHandler(testService)
-
 	userRepo := repository.NewUserRepository(database)
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
@@ -28,9 +24,9 @@ func main() {
 	auth.Post("/register", userHandler.CreateUser)
 	auth.Get("/login", userHandler.UserLogin)
 
-	api := app.Group("/api/v1")
+	api := app.Group("/api/v1", middleware.JWTMiddleware)
 	//Users
-	api.Get("/test", middleware.JWTMiddleware, testHandler.GetTest)
+	api.Get("/user", userHandler.GetAllUser)
 
 	app.Listen(":8080")
 }
