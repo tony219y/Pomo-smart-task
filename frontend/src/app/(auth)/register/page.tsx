@@ -1,5 +1,4 @@
-"use client"
-import api from "@/api/axios"
+
 import {
     Card,
     CardContent,
@@ -7,22 +6,24 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import LoginForm from "@/features/auth/components/LoginForm"
+import RegisterForm from "@/features/auth/components/RegisterForm"
 
-const LoginPage = () => {
+
+const RegisterPage = () => {
+
     return (
         <div className="flex justify-center items-center w-full h-screen bg-[#1c1c1c]">
             <Card className="mx-auto w-full max-w-xs" >
                 <CardHeader>
-                    <CardTitle className="text-center font-black text-3xl">Welcome Back</CardTitle>
-                    <CardDescription className="text-center">Please enter your details to sign in</CardDescription>
+                    <CardTitle className="text-center font-black text-3xl">Hello Welcome!</CardTitle>
+                    <CardDescription className="text-center">Please enter your details to sign up</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <LoginForm />
+                    <RegisterForm />
                 </CardContent>
             </Card>
         </div>
     )
 }
 
-export default LoginPage
+export default RegisterPage
