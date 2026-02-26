@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 const base_api = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -6,13 +6,13 @@ const api = axios.create({
   baseURL: base_api,
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
-  }
+    "Content-Type": "application/json",
+  },
 });
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -20,7 +20,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 api.interceptors.response.use(
@@ -29,12 +29,19 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response && error.response.status === 401) {
-      console.error('Token expired, redirecting to login...');
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      console.error("Token expired, redirecting to login...");
+      localStorage.removeItem("token");
+      window.location.href = "/login";
     }
-    return Promise.reject(error);
-  }
+    const customError = {
+      ...error,
+      message:
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message,
+    };
+    return Promise.reject(customError);
+  },
 );
 
 export default api;

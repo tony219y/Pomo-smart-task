@@ -39,11 +39,11 @@ const AppSidebar = () => {
     const { toggleSidebar, open } = useSidebar();
     return (
         <Sidebar collapsible="icon" className="border-none">
-            <SidebarHeader className="border-b border-black/10">
+            <SidebarHeader className="min-h-15 flex justify-center">
                 <div className={`flex w-full  ${open ? "justify-end" : "justify-center"}`}>
-                    <div className={`${open ? "flex" : "hidden"} items-center mr-auto gap-3 px-2 `}>
+                    <div className={`${open ? "flex" : "hidden"} items-center mr-auto gap-3 px-2`}>
                         <strong className="border h-full p-2 bg-[#28AF60] rounded-md"><CircleCheck color="white" /></strong>
-                        <div className="flex flex-col text-md">
+                        <div className="flex flex-col text-md text-nowrap">
                             <b>Smart Task Pomo</b>
                             <small>Workspace</small>
                         </div>

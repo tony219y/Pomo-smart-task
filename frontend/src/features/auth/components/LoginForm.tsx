@@ -7,9 +7,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import api from '@/api/axios';
 import { setToken } from '@/lib/auth';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 const LoginForm = () => {
     const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter()
 
     const { register, handleSubmit, formState: { errors }, reset } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) })
 
@@ -25,8 +28,9 @@ const LoginForm = () => {
             const res = await api.post("/auth/login", payload);
             setToken(res);
             reset();
-        } catch (error: any) {
-            console.error(error);
+            router.push("/dashboard")
+        } catch (error : any) {
+            toast.error(error.message);
         } finally {
             setIsLoading(false);
         }
