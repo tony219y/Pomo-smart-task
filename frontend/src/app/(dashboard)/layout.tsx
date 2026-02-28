@@ -34,7 +34,7 @@ export default function RootLayout({
                             <AppSidebar />
                             <div className="flex flex-col flex-1">
                                 <AppNavbar />
-                                <main className="flex-1 p-6">
+                                <main className="flex-1 p-6 bg-[#f6f7f8]" >
                                     {children}
                                 </main>
                             </div>
