@@ -33,7 +33,12 @@ func JWTMiddleware(c fiber.Ctx) error {
 	}
 
 	claims := token.Claims.(jwt.MapClaims)
-	c.Locals("user_id", claims["user_id"])
+	if val, ok := claims["user_id"].(float64); ok {
+		c.Locals("user_id", uint(val))
+	} else {
+		return c.Status(401).JSON(fiber.Map{"message": "invalid token claims"})
+	}
+
 	c.Locals("role", claims["role"])
 
 	return c.Next()
