@@ -1,9 +1,7 @@
 "use client"
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from '@/components/ui/button'
-import api from "@/api/axios"
 import { Input } from "@/components/ui/input"
-import { setToken } from "@/lib/auth"
 import { useState } from "react"
 import { useForm } from 'react-hook-form'
 import { RegisterInput, registerSchema } from '../schemas/register.schema'
@@ -26,9 +24,7 @@ const RegisterForm = () => {
         username: data.username,
         password: data.password,
       };
-
       await CreateUser(payload)
-
       reset();
     } catch (error: any) {
       console.error(error);
@@ -36,7 +32,6 @@ const RegisterForm = () => {
       setIsLoading(false);
     }
   };
-
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -68,9 +63,7 @@ const RegisterForm = () => {
           <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>
         )}
       </div>
-
       <Link href="/login" className="flex w-full justify-end my-2 text-[#28AF60] hover:underline">I have an account.</Link>
-
       <Button
         disabled={isLoading}
         className="w-full bg-[#28AF60] hover:bg-[#28AF60]/80 mt-2"

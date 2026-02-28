@@ -1,5 +1,3 @@
-"use client"
-import api from "@/api/axios"
 import {
     Card,
     CardContent,

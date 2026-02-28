@@ -1,20 +1,18 @@
+'use client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form';
 import { LoginInput, loginSchema } from '../schemas/login.schema';
 import { zodResolver } from '@hookform/resolvers/zod';
-import api from '@/api/axios';
-import { setToken } from '@/lib/auth';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useLogin } from '../hooks/use-login';
 
 const LoginForm = () => {
-    const [isLoading, setIsLoading] = useState(false);
-    const router = useRouter()
-
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const { register, handleSubmit, formState: { errors }, reset } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) })
+    const { userLogin } = useLogin();
 
     const onSubmit = async (data: LoginInput) => {
         if (isLoading) return
@@ -25,11 +23,9 @@ const LoginForm = () => {
                 email: data.email,
                 password: data.password,
             };
-            const res = await api.post("/auth/login", payload);
-            setToken(res);
+            await userLogin(payload)
             reset();
-            router.push("/dashboard")
-        } catch (error : any) {
+        } catch (error: any) {
             toast.error(error.message);
         } finally {
             setIsLoading(false);

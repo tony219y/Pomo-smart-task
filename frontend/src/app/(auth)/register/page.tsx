@@ -1,4 +1,3 @@
-
 import {
     Card,
     CardContent,
@@ -8,9 +7,7 @@ import {
 } from "@/components/ui/card"
 import RegisterForm from "@/features/auth/components/RegisterForm"
 
-
 const RegisterPage = () => {
-
     return (
         <div className="flex justify-center items-center w-full h-screen bg-[#1c1c1c]">
             <Card className="mx-auto w-full max-w-xs" >
