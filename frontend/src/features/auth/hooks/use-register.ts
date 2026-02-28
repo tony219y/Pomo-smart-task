@@ -1,7 +1,7 @@
 import { registerUser } from "../services/auth.service";
 
 export const useRegister = () => {
-  const register = async (data: {
+  const CreateUser = async (data: {
     email: string;
     username: string;
     password: string;
@@ -9,5 +9,5 @@ export const useRegister = () => {
     return await registerUser(data);
   };
 
-  return { register };
+  return { CreateUser };
 };

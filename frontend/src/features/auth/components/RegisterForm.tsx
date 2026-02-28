@@ -8,11 +8,13 @@ import { useState } from "react"
 import { useForm } from 'react-hook-form'
 import { RegisterInput, registerSchema } from '../schemas/register.schema'
 import Link from "next/link";
+import { useRegister } from "../hooks/use-register";
 
 
 const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { register, handleSubmit, formState: { errors }, reset, } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema), });
+  const { CreateUser } = useRegister();
 
   const onSubmit = async (data: RegisterInput) => {
     if (isLoading) return;
@@ -25,7 +27,7 @@ const RegisterForm = () => {
         password: data.password,
       };
 
-      const res = await api.post("/auth/register", payload);
+      await CreateUser(payload)
 
       reset();
     } catch (error: any) {
