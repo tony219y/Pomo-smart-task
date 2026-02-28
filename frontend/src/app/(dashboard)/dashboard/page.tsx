@@ -1,3 +1,4 @@
+"use client"
 import CreateTask from "@/features/dashboard/components/CreateTask"
 
 const page = () => {
