@@ -9,7 +9,6 @@ func Migration(db *gorm.DB) {
 	db.AutoMigrate(
 		&model.Users{},
 		&model.Task{},
-		&model.TaskTags{},
 		&model.Tags{},
 	)
 }
