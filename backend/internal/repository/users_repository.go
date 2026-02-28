@@ -33,5 +33,22 @@ func (r *UserRepository) FindByEmail(email string) (*model.Users, error) {
 }
 
 func (r *UserRepository) CreateUser(user *model.Users) error {
-	return r.db.Create(user).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Create(user).Error; err != nil {
+			return err
+		}
+
+		defaultTags := []model.Tags{
+			{UserID: user.ID, Name: "Work"},
+			{UserID: user.ID, Name: "Personal"},
+			{UserID: user.ID, Name: "Urgent"},
+		}
+
+		if err := tx.Create(&defaultTags).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
