@@ -13,17 +13,18 @@ func NewTaskRepository(db *gorm.DB) *TaskRepository {
 	return &TaskRepository{db: db}
 }
 
-func (r *TaskRepository) FindAll(userID uint) (*[]model.TaskResponse, error) {
-	var task []model.TaskResponse
-	result := r.db.Model(&model.Task{}).
-		Where("user_id = ?", userID).
-		Find(&task)
+func (r *TaskRepository) FindAll(userID uint) ([]model.TaskResponse, error) {
+	var tasks []model.TaskResponse
 
-	if result.Error != nil {
-		return nil, result.Error
+	err := r.db.Model(&model.Task{}).
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Find(&tasks).Error
+	if err != nil {
+		return nil, err
 	}
-	println(result)
-	return &task, nil
+
+	return tasks, nil
 }
 
 func (r *TaskRepository) FindByOne(userID uint, taskID uint) (*[]model.TaskResponse, error) {
@@ -36,8 +37,8 @@ func (r *TaskRepository) FindByOne(userID uint, taskID uint) (*[]model.TaskRespo
 		return nil, result.Error
 	}
 	return &task, nil
-
 }
+
 func (r *TaskRepository) Create(newtask *model.Task, userID uint) (*model.Task, error) {
 	task := model.Task{
 		UserID:        userID,
@@ -52,13 +53,12 @@ func (r *TaskRepository) Create(newtask *model.Task, userID uint) (*model.Task, 
 		return nil, err
 	}
 	return &task, nil
-
 }
-func (r *TaskRepository) Update() *model.Task {
 
+func (r *TaskRepository) Update() *model.Task {
 	return nil
 }
+
 func (r *TaskRepository) Delete() *model.Task {
 	return nil
-
 }

@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/tony219y/pomo-smart-task-api/internal/model"
+	"github.com/tony219y/pomo-smart-task-api/internal/response"
 	"github.com/tony219y/pomo-smart-task-api/internal/service"
 )
 
@@ -17,22 +18,32 @@ func NewTaskHandler(service *service.TaskService) *TaskHandler {
 func (h *TaskHandler) Create(c fiber.Ctx) error {
 	userID, ok := c.Locals("user_id").(uint)
 	if !ok {
-		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized: Invalid User ID type"})
+		return response.Error(c, fiber.StatusUnauthorized, "unauthorized: invalid user id type")
 	}
 
 	req := new(model.Task)
 	if err := c.Bind().Body(req); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
 	}
+
 	_, err := h.service.CreateTask(req, userID)
 	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Create task failed"})
+		return response.Error(c, fiber.StatusBadRequest, "create task failed")
 	}
 
-	return c.Status(201).JSON(fiber.Map{"message": "Create task successfully!"})
-
+	return response.Message(c, fiber.StatusCreated, "create task successfully")
 }
 
 func (h *TaskHandler) FindAll(c fiber.Ctx) error {
-	return nil
+	userID, ok := c.Locals("user_id").(uint)
+	if !ok {
+		return response.Error(c, fiber.StatusUnauthorized, "unauthorized: invalid user id type")
+	}
+
+	tasks, err := h.service.FindAll(userID)
+	if err != nil {
+		return response.Error(c, fiber.StatusInternalServerError, "get tasks failed")
+	}
+
+	return c.Status(fiber.StatusOK).JSON(tasks)
 }

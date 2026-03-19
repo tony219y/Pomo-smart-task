@@ -13,9 +13,10 @@ func NewTaskService(repo *repository.TaskRepository) *TaskService {
 	return &TaskService{repo: repo}
 }
 
-func (r *TaskService) CreateTask(req *model.Task, userId uint) (*model.Task, error) {
-	return r.repo.Create(req, userId)
+func (s *TaskService) CreateTask(req *model.Task, userID uint) (*model.Task, error) {
+	return s.repo.Create(req, userID)
 }
-func (r *TaskService) FindAll() {
 
+func (s *TaskService) FindAll(userID uint) ([]model.TaskResponse, error) {
+	return s.repo.FindAll(userID)
 }
