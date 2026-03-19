@@ -15,20 +15,19 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) Login(email, password string) (string, error) {
+func (s *UserService) Login(email, password string) (string, string) {
 	user, err := s.repo.FindByEmail(email)
 	if err != nil {
-		return "", err
+		return "", "Incorrect username or password"
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return "", err
+		return "", "Incorrect username or password"
 	}
-	// token jwt
 	token, err := middleware.GenerateToken(user.ID, user.Role)
 	if err != nil {
-		return "", err
+		return "", "Generated token failed!"
 	}
-	return token, nil
+	return token, ""
 }
 func (s *UserService) Register(email, username, password string) (*model.Users, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
