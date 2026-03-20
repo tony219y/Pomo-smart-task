@@ -52,3 +52,12 @@ func (r *UserRepository) CreateUser(user *model.Users) error {
 		return nil
 	})
 }
+
+func (r *UserRepository) GetUserByID(userID uint) (*model.UserResponse, error) {
+	var user model.UserResponse
+
+	if err := r.db.Model(&model.Users{}).Where("id = ?", userID).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}

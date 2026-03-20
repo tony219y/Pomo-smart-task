@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/tony219y/pomo-smart-task-api/internal/model"
 	"github.com/tony219y/pomo-smart-task-api/internal/response"
@@ -35,12 +37,21 @@ func (h *UserHandler) UserLogin(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
 	}
 
-	token, errMsg := h.service.Login(req.Email, req.Password)
+	accessToken, refreshToken, errMsg := h.service.Login(req.Email, req.Password)
 	if errMsg != "" {
 		return response.Error(c, fiber.StatusBadRequest, errMsg)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"token": token})
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Expires:  time.Now().Add(7 * 24 * time.Hour),
+		HTTPOnly: true,
+		SameSite: "Lax",
+		Secure:   false,
+	})
+
+	return c.Status(fiber.StatusOK).JSON(accessToken)
 }
 
 func (h *UserHandler) GetAllUser(c fiber.Ctx) error {
@@ -59,4 +70,23 @@ func (h *UserHandler) GetAllUser(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, err.Error())
 	}
 	return c.JSON(users)
+}
+
+func (h *UserHandler) RefreshToken(c fiber.Ctx) error {
+	refreshToken := c.Cookies("refresh_token")
+	accessToken := h.service.RefreshSession(refreshToken)
+
+	return c.JSON(&fiber.Map{
+		"accessToken": accessToken,
+	})
+}
+func (h *UserHandler) Profile(c fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+	user, _ := h.service.GetUserByID(userID)
+
+	return c.JSON(user)
+}
+func (h *UserHandler) Logout(c fiber.Ctx) error {
+	c.ClearCookie("refresh_token")
+	return response.Message(c, 200, "Logged out")
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/tony219y/pomo-smart-task-api/internal/response"
 )
@@ -63,21 +64,58 @@ func JWTMiddleware(c fiber.Ctx) error {
 	return c.Next()
 }
 
-func GenerateToken(id uint, role string) (string, error) {
+func GenerateToken(id uint, role string) (string, string, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 
-	claims := jwt.MapClaims{
+	accessClaims := jwt.MapClaims{
 		"user_id": id,
 		"role":    role,
-		"exp":     time.Now().Add(24 * time.Hour).Unix(),
+		"type":    "access",
+		"exp":     time.Now().Add(15 * time.Minute).Unix(),
 		"iat":     time.Now().Unix(),
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	t, err := token.SignedString([]byte(jwtSecret))
+	refreshClaims := jwt.MapClaims{
+		"user_id": id,
+		"type":    "refresh",
+		"role":    role,
+		"jti":     uuid.NewString(),
+		"exp":     time.Now().Add(7 * 30 * time.Hour).Unix(),
+		"iat":     time.Now().Unix(),
+	}
+	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString([]byte(jwtSecret))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return t, nil
+	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(jwtSecret))
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+func RefreshToken(tokenString string) string {
+	jwtSecret := os.Getenv("JWT_SECRET")
+
+	parsed, _ := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
+		return []byte(jwtSecret), nil
+	}, jwt.WithValidMethods([]string{"HS256"}))
+
+	claims := parsed.Claims.(jwt.MapClaims)
+	userID := claims["user_id"].(float64)
+	role := claims["role"].(string)
+
+	accessClaims := jwt.MapClaims{
+		"user_id": userID,
+		"role":    role,
+		"type":    "access",
+		"exp":     time.Now().Add(15 * time.Minute).Unix(),
+		"iat":     time.Now().Unix(),
+	}
+
+	accessToken, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString([]byte(jwtSecret))
+
+	return accessToken
 }

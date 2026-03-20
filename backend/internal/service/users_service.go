@@ -15,19 +15,19 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) Login(email, password string) (string, string) {
+func (s *UserService) Login(email, password string) (string, string, string) {
 	user, err := s.repo.FindByEmail(email)
 	if err != nil {
-		return "", "Incorrect username or password"
+		return "", "", "Incorrect username or password"
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return "", "Incorrect username or password"
+		return "", "", "Incorrect username or password"
 	}
-	token, err := middleware.GenerateToken(user.ID, user.Role)
+	accessToken, refreshToken, err := middleware.GenerateToken(user.ID, user.Role)
 	if err != nil {
-		return "", "Generated token failed!"
+		return "", "", "Generated token failed!"
 	}
-	return token, ""
+	return accessToken, refreshToken, ""
 }
 func (s *UserService) Register(email, username, password string) (*model.Users, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -50,4 +50,12 @@ func (s *UserService) Register(email, username, password string) (*model.Users, 
 
 func (s *UserService) GetAllUser() ([]model.UserResponse, error) {
 	return s.repo.FindAll()
+}
+func (s *UserService) GetUserByID(userId uint) (*model.UserResponse, error) {
+	user, err := s.repo.GetUserByID(userId)
+	return user, err
+}
+
+func (s *UserService) RefreshSession(token string) string {
+	return middleware.RefreshToken(token)
 }

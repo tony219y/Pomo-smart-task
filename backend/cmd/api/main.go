@@ -22,8 +22,9 @@ func main() {
 	db.Migration(database)
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: cfg.AllowedOrigins,
-		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowOrigins:     cfg.AllowedOrigins,
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowCredentials: true,
 	}))
 
 	routes.Register(app, buildHandlers(database))
