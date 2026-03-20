@@ -1,15 +1,62 @@
 import { toast } from "sonner";
-import { CreateTask } from "../services/dashboard.service";
-import { TasksProps } from "../types/dashboard.types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CreateTask,
+  DeleteTask,
+  GetTasks,
+  UpdateTask,
+} from "../services/dashboard.service";
+import { Task, TasksProps } from "../types/dashboard.types";
 
 export const useTasks = () => {
-  const createTask = async (payload: TasksProps) => {
-    const response = await CreateTask(payload);
-    if (!response) {
-      throw new Error("Create task failed");
-    }
-    toast.success("Task created!");
-  };
+  const queryClient = useQueryClient();
 
-  return { createTask };
+  const tasksQuery = useQuery({
+    queryKey: ["tasks"],
+    queryFn: async () => {
+      const response = await GetTasks();
+      return response.data as Task[];
+    },
+  });
+
+  const createTaskMutation = useMutation({
+    mutationFn: async (payload: TasksProps) => {
+      const response = await CreateTask(payload);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Task created!");
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+
+  const updateTaskMutation = useMutation({
+    mutationFn: async (payload: { taskId: number; data: { status?: string } }) => {
+      const response = await UpdateTask(payload.taskId, payload.data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: number) => {
+      const response = await DeleteTask(taskId);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Task deleted");
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+
+  return {
+    tasks: tasksQuery.data ?? [],
+    isLoadingTasks: tasksQuery.isLoading,
+    refetchTasks: tasksQuery.refetch,
+    createTask: createTaskMutation.mutateAsync,
+    updateTask: updateTaskMutation.mutateAsync,
+    deleteTask: deleteTaskMutation.mutateAsync,
+  };
 };

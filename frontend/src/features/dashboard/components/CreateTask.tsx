@@ -54,8 +54,9 @@ const CreateTask = () => {
       reset();
       setSelectedTagIds([]);
       setPriority("low");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Something went wrong");
+      setIsOpen(false);
+    } catch {
+      toast.error("Something went wrong");
     } finally {
       setIsLoading(false);
     }
