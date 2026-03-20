@@ -1,9 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import api from "@/api/axios";
 import { toast } from "sonner";
-import { Tags } from "../types/dashboard.types";
 import { GetTags } from "../services/dashboard.service";
 
 export const useTags = () => {

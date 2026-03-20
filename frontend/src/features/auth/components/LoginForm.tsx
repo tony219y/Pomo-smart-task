@@ -3,16 +3,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form';
-import { LoginInput, loginSchema } from '../schemas/login.schema';
+import { LoginInput, loginSchema } from '../schemas/auth.schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { useLogin } from '../hooks/use-login';
+import { useAuth } from '../hooks/use-auth';
 
 const LoginForm = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const { register, handleSubmit, formState: { errors }, reset } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) })
-    const { userLogin } = useLogin();
+    const { userLogin } = useAuth();
 
     const onSubmit = async (data: LoginInput) => {
         if (isLoading) return

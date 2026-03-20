@@ -1,3 +1,4 @@
+import { useAuthStore } from "@/store/auth-store";
 import axios from "axios";
 
 const base_api = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -8,11 +9,12 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = useAuthStore.getState().accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -30,8 +32,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       console.error("Token expired, redirecting to login...");
-      localStorage.removeItem("token");
-      window.location.href = "/login";
+      // localStorage.removeItem("token");
+      // window.location.href = "/login";
     }
     const customError = {
       ...error,
