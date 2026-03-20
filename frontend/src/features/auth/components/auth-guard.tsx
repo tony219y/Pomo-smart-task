@@ -17,11 +17,12 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      const response = await refreshToken();
       try {
+        const response = await refreshToken();
         if (response) {
           setAccessToken(response.accessToken);
           setIsLoading(false);
+          return;
         }
       } catch (error) {
         router.replace("/login");
@@ -30,7 +31,7 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
       }
     };
     hasToken();
-  }, []);
+  }, [accessToken, router, setAccessToken]);
 
   if (isLoading) {
     return (

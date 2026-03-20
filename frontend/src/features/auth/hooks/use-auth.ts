@@ -11,12 +11,10 @@ export const useAuth = () => {
 
   const userLogin = async (data: { email: string; password: string }) => {
     const response = await loginUser(data);
-
-    console.log(response);
-    if (!response) {
+    if (!response?.accessToken) {
       throw new Error("Missing token");
     }
-    setAccessToken(response);
+    setAccessToken(response.accessToken);
     router.push("/dashboard");
   };
 

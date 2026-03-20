@@ -9,7 +9,7 @@ const page = () => {
       </header>
       <main>
         {/* mid */}
-        <div className="max-w-2xl h-full overflow-y-scroll">
+        <div className="max-w-2xl h-full">
           {/* add a tasks */}
           <CreateTask />
           {/* tasks list */}

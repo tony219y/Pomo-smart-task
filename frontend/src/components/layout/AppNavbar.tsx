@@ -37,7 +37,7 @@ const AppNavbar = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <Bell></Bell>
-          <div className="flex gap-3 px-5 py-1 border rounded-md items-center shadow-md">
+          <div className="flex gap-5 px-3 py-1 border rounded-md items-center shadow-md">
             <Avatar>
               <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
               <AvatarFallback>CN</AvatarFallback>
