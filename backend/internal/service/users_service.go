@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/tony219y/pomo-smart-task-api/internal/middleware"
 	"github.com/tony219y/pomo-smart-task-api/internal/model"
 	"github.com/tony219y/pomo-smart-task-api/internal/repository"
@@ -23,8 +25,11 @@ func (s *UserService) Login(email, password string) (string, string, string) {
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", "", "Incorrect username or password"
 	}
-	accessToken, refreshToken, err := middleware.GenerateTokens(user.ID, user.Role)
+	accessToken, refreshToken, refreshJTI, refreshExpiresAt, err := middleware.GenerateTokens(user.ID, user.Role)
 	if err != nil {
+		return "", "", "Generated token failed!"
+	}
+	if err := s.repo.SaveRefreshToken(user.ID, refreshJTI, refreshExpiresAt); err != nil {
 		return "", "", "Generated token failed!"
 	}
 	return accessToken, refreshToken, ""
@@ -56,10 +61,39 @@ func (s *UserService) GetUserByID(userId uint) (*model.UserResponse, error) {
 	return user, err
 }
 
-func (s *UserService) RefreshSession(token string) (string, error) {
-	accessToken, err := middleware.RefreshAccessToken(token)
+func (s *UserService) RefreshSession(token string) (string, string, error) {
+	claims, err := middleware.ParseRefreshToken(token)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return accessToken, nil
+
+	active, err := s.repo.IsRefreshTokenActive(claims.JTI)
+	if err != nil {
+		return "", "", err
+	}
+	if !active {
+		return "", "", errors.New("refresh token revoked")
+	}
+
+	if err := s.repo.RevokeRefreshToken(claims.JTI); err != nil {
+		return "", "", err
+	}
+
+	newAccess, newRefresh, newJTI, newExpiresAt, err := middleware.GenerateTokens(claims.UserID, claims.Role)
+	if err != nil {
+		return "", "", err
+	}
+	if err := s.repo.SaveRefreshToken(claims.UserID, newJTI, newExpiresAt); err != nil {
+		return "", "", err
+	}
+
+	return newAccess, newRefresh, nil
+}
+
+func (s *UserService) RevokeSession(token string) error {
+	claims, err := middleware.ParseRefreshToken(token)
+	if err != nil {
+		return nil
+	}
+	return s.repo.RevokeRefreshToken(claims.JTI)
 }

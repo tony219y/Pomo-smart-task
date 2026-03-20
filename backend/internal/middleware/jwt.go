@@ -17,6 +17,13 @@ func init() {
 	_ = godotenv.Load()
 }
 
+type RefreshClaims struct {
+	UserID    uint
+	Role      string
+	JTI       string
+	ExpiresAt time.Time
+}
+
 func JWTMiddleware(c fiber.Ctx) error {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
@@ -69,71 +76,94 @@ func JWTMiddleware(c fiber.Ctx) error {
 	return c.Next()
 }
 
-func GenerateTokens(id uint, role string) (string, string, error) {
+func GenerateTokens(id uint, role string) (string, string, string, time.Time, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
+	now := time.Now()
+	refreshJTI := uuid.NewString()
+	refreshExpiresAt := now.Add(30 * 24 * time.Hour)
 
 	accessClaims := jwt.MapClaims{
 		"user_id": id,
 		"role":    role,
 		"type":    "access",
-		"exp":     time.Now().Add(15 * time.Minute).Unix(),
-		"iat":     time.Now().Unix(),
+		"exp":     now.Add(15 * time.Minute).Unix(),
+		"iat":     now.Unix(),
 	}
 
 	refreshClaims := jwt.MapClaims{
 		"user_id": id,
 		"type":    "refresh",
 		"role":    role,
-		"jti":     uuid.NewString(),
-		"exp":     time.Now().Add(30 * 24 * time.Hour).Unix(),
-		"iat":     time.Now().Unix(),
+		"jti":     refreshJTI,
+		"exp":     refreshExpiresAt.Unix(),
+		"iat":     now.Unix(),
 	}
 	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString([]byte(jwtSecret))
 	if err != nil {
-		return "", "", err
+		return "", "", "", time.Time{}, err
 	}
 
 	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(jwtSecret))
 	if err != nil {
-		return "", "", err
+		return "", "", "", time.Time{}, err
 	}
 
-	return accessToken, refreshToken, nil
+	return accessToken, refreshToken, refreshJTI, refreshExpiresAt, nil
 }
 
-func RefreshAccessToken(tokenString string) (string, error) {
+func ParseRefreshToken(tokenString string) (*RefreshClaims, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 
 	parsed, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		return []byte(jwtSecret), nil
 	}, jwt.WithValidMethods([]string{"HS256"}))
 	if err != nil || !parsed.Valid {
-		return "", errors.New("invalid refresh token")
+		return nil, errors.New("invalid refresh token")
 	}
 
 	claims, ok := parsed.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", errors.New("invalid refresh token claims")
+		return nil, errors.New("invalid refresh token claims")
 	}
 	tokenType, ok := claims["type"].(string)
 	if !ok || tokenType != "refresh" {
-		return "", errors.New("invalid token type")
+		return nil, errors.New("invalid token type")
 	}
-	userID, ok := claims["user_id"].(float64)
+	userIDRaw, ok := claims["user_id"].(float64)
 	if !ok {
-		return "", errors.New("invalid refresh token claims")
+		return nil, errors.New("invalid refresh token claims")
 	}
 	role, ok := claims["role"].(string)
 	if !ok {
-		return "", errors.New("invalid refresh token claims")
+		return nil, errors.New("invalid refresh token claims")
 	}
+	jti, ok := claims["jti"].(string)
+	if !ok || jti == "" {
+		return nil, errors.New("invalid refresh token claims")
+	}
+	expRaw, ok := claims["exp"].(float64)
+	if !ok {
+		return nil, errors.New("invalid refresh token claims")
+	}
+
+	return &RefreshClaims{
+		UserID:    uint(userIDRaw),
+		Role:      role,
+		JTI:       jti,
+		ExpiresAt: time.Unix(int64(expRaw), 0),
+	}, nil
+}
+
+func GenerateAccessToken(userID uint, role string) (string, error) {
+	jwtSecret := os.Getenv("JWT_SECRET")
+	now := time.Now()
 
 	accessClaims := jwt.MapClaims{
 		"user_id": userID,
 		"role":    role,
 		"type":    "access",
-		"exp":     time.Now().Add(15 * time.Minute).Unix(),
-		"iat":     time.Now().Unix(),
+		"exp":     now.Add(15 * time.Minute).Unix(),
+		"iat":     now.Unix(),
 	}
 
 	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString([]byte(jwtSecret))

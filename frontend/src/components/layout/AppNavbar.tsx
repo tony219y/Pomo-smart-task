@@ -1,15 +1,13 @@
 "use client";
-import { Button } from "@base-ui/react/button";
 import { Input } from "@base-ui/react/input";
 import { Bell } from "lucide-react";
 import { useState } from "react";
-import { Avatar, AvatarBadge, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 
 const AppNavbar = () => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { useProfile } = useAuth();
-  const { data: userProfile, isLoading: isLoadingTags } = useProfile();
+  const { data: userProfile } = useProfile();
 
   const [searchTerm, setSearchTerm] = useState<string>("");
   return (
@@ -43,8 +41,8 @@ const AppNavbar = () => {
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <h1 className="capitalize font-bold">{userProfile?.username}</h1>
-              <p className="capitalize text-xs font-light opacity-50">{userProfile?.role}</p>
+              <h1 className="capitalize font-bold">{userProfile?.username ?? "User"}</h1>
+              <p className="capitalize text-xs font-light opacity-50">{userProfile?.role ?? "member"}</p>
             </div>
           </div>
         </div>

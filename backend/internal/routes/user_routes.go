@@ -8,4 +8,5 @@ import (
 func registerUserRoutes(protected fiber.Router, userHandler *handler.UserHandler) {
 	users := protected.Group("/users")
 	users.Get("/", userHandler.GetAllUser)
+	users.Get("/me", userHandler.Me)
 }

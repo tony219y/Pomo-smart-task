@@ -23,5 +23,5 @@ export const logOut = async () => {
   return await api.post("/auth/logout");
 };
 export const GetProfile = async () => {
-  return await api.post("/auth/profile");
+  return await api.get("/users/me");
 };

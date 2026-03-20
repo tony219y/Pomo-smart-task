@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -42,13 +43,14 @@ func (h *UserHandler) UserLogin(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, errMsg)
 	}
 
+	secureCookie := os.Getenv("APP_ENV") == "production"
 	c.Cookie(&fiber.Cookie{
 		Name:     "refresh_token",
 		Value:    refreshToken,
 		Expires:  time.Now().Add(30 * 24 * time.Hour),
 		HTTPOnly: true,
 		SameSite: "Lax",
-		Secure:   false,
+		Secure:   secureCookie,
 		Path:     "/",
 	})
 
@@ -81,29 +83,49 @@ func (h *UserHandler) RefreshToken(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusUnauthorized, "missing refresh token")
 	}
 
-	accessToken, err := h.service.RefreshSession(refreshToken)
+	accessToken, newRefreshToken, err := h.service.RefreshSession(refreshToken)
 	if err != nil {
 		return response.Error(c, fiber.StatusUnauthorized, "invalid refresh token")
 	}
+
+	secureCookie := os.Getenv("APP_ENV") == "production"
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    newRefreshToken,
+		Expires:  time.Now().Add(30 * 24 * time.Hour),
+		HTTPOnly: true,
+		SameSite: "Lax",
+		Secure:   secureCookie,
+		Path:     "/",
+	})
 
 	return c.Status(fiber.StatusOK).JSON(dto.RefreshResponse{
 		AccessToken: accessToken,
 	})
 }
-func (h *UserHandler) Profile(c fiber.Ctx) error {
+func (h *UserHandler) Me(c fiber.Ctx) error {
 	userID := c.Locals("user_id").(uint)
-	user, _ := h.service.GetUserByID(userID)
+	user, err := h.service.GetUserByID(userID)
+	if err != nil {
+		return response.Error(c, fiber.StatusNotFound, "user not found")
+	}
 
 	return c.JSON(user)
 }
 func (h *UserHandler) Logout(c fiber.Ctx) error {
+	refreshToken := c.Cookies("refresh_token")
+	if refreshToken != "" {
+		_ = h.service.RevokeSession(refreshToken)
+	}
+
+	secureCookie := os.Getenv("APP_ENV") == "production"
 	c.Cookie(&fiber.Cookie{
 		Name:     "refresh_token",
 		Value:    "",
 		Expires:  time.Now().Add(-time.Hour),
 		HTTPOnly: true,
 		SameSite: "Lax",
-		Secure:   false,
+		Secure:   secureCookie,
 		Path:     "/",
 	})
 	return response.Message(c, 200, "Logged out")
