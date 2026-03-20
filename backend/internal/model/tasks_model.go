@@ -7,7 +7,7 @@ import (
 )
 
 type Task struct {
-	ID            uint      `gorm:"primaryKey"`
+	ID            uint      `gorm:"primaryKey" json:"id"`
 	UserID        uint      `json:"userId"`
 	User          Users     `gorm:"foreignKey:UserID"`
 	Title         string    `json:"title" gorm:"type:varchar(255);not null"`
@@ -21,7 +21,7 @@ type Task struct {
 	DeletedAt     gorm.DeletedAt `gorm:"index"`
 }
 type TaskResponse struct {
-	ID            uint      `gorm:"primaryKey"`
+	ID            uint      `gorm:"primaryKey" json:"id"`
 	UserID        uint      `json:"userId"`
 	User          Users     `gorm:"foreignKey:UserID"`
 	Title         string    `json:"title" gorm:"type:varchar(255);not null"`
