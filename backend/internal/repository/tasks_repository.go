@@ -27,15 +27,16 @@ func (r *TaskRepository) FindAll(userID uint) ([]model.TaskResponse, error) {
 	return tasks, nil
 }
 
-func (r *TaskRepository) FindByOne(userID uint, taskID uint) (*[]model.TaskResponse, error) {
-	var task []model.TaskResponse
+func (r *TaskRepository) FindByID(userID uint, taskID uint) (*model.TaskResponse, error) {
+	var task model.TaskResponse
 
-	result := r.db.Model(&model.Task{}).
-		Where("user_id = ? AND task_id =?", userID, taskID).
-		Find(&task)
-	if result.Error != nil {
-		return nil, result.Error
+	err := r.db.Model(&model.Task{}).
+		Where("user_id = ? AND id = ?", userID, taskID).
+		First(&task).Error
+	if err != nil {
+		return nil, err
 	}
+
 	return &task, nil
 }
 
@@ -55,10 +56,27 @@ func (r *TaskRepository) Create(newtask *model.Task, userID uint) (*model.Task, 
 	return &task, nil
 }
 
-func (r *TaskRepository) Update() *model.Task {
-	return nil
+func (r *TaskRepository) Update(taskID uint, userID uint, updates map[string]interface{}) (*model.Task, error) {
+	var task model.Task
+	err := r.db.Where("id = ? AND user_id = ?", taskID, userID).First(&task).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if err := r.db.Model(&task).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+
+	return &task, nil
 }
 
-func (r *TaskRepository) Delete() *model.Task {
+func (r *TaskRepository) Delete(taskID uint, userID uint) error {
+	result := r.db.Where("id = ? AND user_id = ?", taskID, userID).Delete(&model.Task{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
 	return nil
 }
