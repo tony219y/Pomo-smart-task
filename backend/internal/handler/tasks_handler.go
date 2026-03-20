@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v3"
+	"github.com/tony219y/pomo-smart-task-api/internal/dto"
 	"github.com/tony219y/pomo-smart-task-api/internal/model"
 	"github.com/tony219y/pomo-smart-task-api/internal/response"
 	"github.com/tony219y/pomo-smart-task-api/internal/service"
@@ -21,12 +22,21 @@ func (h *TaskHandler) Create(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusUnauthorized, "unauthorized: invalid user id type")
 	}
 
-	req := new(model.Task)
+	req := new(dto.CreateTaskRequest)
 	if err := c.Bind().Body(req); err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
 	}
 
-	_, err := h.service.CreateTask(req, userID)
+	task := &model.Task{
+		Title:         req.Title,
+		Description:   req.Description,
+		Status:        req.Status,
+		Priority:      req.Priority,
+		DueDate:       req.DueDate,
+		EstimatedTime: req.EstimatedTime,
+	}
+
+	_, err := h.service.CreateTask(task, userID)
 	if err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "create task failed")
 	}

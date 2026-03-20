@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/tony219y/pomo-smart-task-api/internal/model"
+	"github.com/tony219y/pomo-smart-task-api/internal/dto"
 	"github.com/tony219y/pomo-smart-task-api/internal/response"
 	"github.com/tony219y/pomo-smart-task-api/internal/service"
 )
@@ -18,7 +18,7 @@ func NewUserHandler(service *service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) CreateUser(c fiber.Ctx) error {
-	req := new(model.RegisterReq)
+	req := new(dto.RegisterRequest)
 	if err := c.Bind().Body(req); err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
 	}
@@ -32,7 +32,7 @@ func (h *UserHandler) CreateUser(c fiber.Ctx) error {
 }
 
 func (h *UserHandler) UserLogin(c fiber.Ctx) error {
-	req := new(model.LoginReq)
+	req := new(dto.LoginRequest)
 	if err := c.Bind().Body(req); err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
 	}
@@ -45,13 +45,16 @@ func (h *UserHandler) UserLogin(c fiber.Ctx) error {
 	c.Cookie(&fiber.Cookie{
 		Name:     "refresh_token",
 		Value:    refreshToken,
-		Expires:  time.Now().Add(7 * 24 * time.Hour),
+		Expires:  time.Now().Add(30 * 24 * time.Hour),
 		HTTPOnly: true,
 		SameSite: "Lax",
 		Secure:   false,
+		Path:     "/",
 	})
 
-	return c.Status(fiber.StatusOK).JSON(accessToken)
+	return c.Status(fiber.StatusOK).JSON(dto.LoginResponse{
+		AccessToken: accessToken,
+	})
 }
 
 func (h *UserHandler) GetAllUser(c fiber.Ctx) error {
@@ -74,10 +77,17 @@ func (h *UserHandler) GetAllUser(c fiber.Ctx) error {
 
 func (h *UserHandler) RefreshToken(c fiber.Ctx) error {
 	refreshToken := c.Cookies("refresh_token")
-	accessToken := h.service.RefreshSession(refreshToken)
+	if refreshToken == "" {
+		return response.Error(c, fiber.StatusUnauthorized, "missing refresh token")
+	}
 
-	return c.JSON(&fiber.Map{
-		"accessToken": accessToken,
+	accessToken, err := h.service.RefreshSession(refreshToken)
+	if err != nil {
+		return response.Error(c, fiber.StatusUnauthorized, "invalid refresh token")
+	}
+
+	return c.Status(fiber.StatusOK).JSON(dto.RefreshResponse{
+		AccessToken: accessToken,
 	})
 }
 func (h *UserHandler) Profile(c fiber.Ctx) error {
@@ -87,6 +97,14 @@ func (h *UserHandler) Profile(c fiber.Ctx) error {
 	return c.JSON(user)
 }
 func (h *UserHandler) Logout(c fiber.Ctx) error {
-	c.ClearCookie("refresh_token")
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour),
+		HTTPOnly: true,
+		SameSite: "Lax",
+		Secure:   false,
+		Path:     "/",
+	})
 	return response.Message(c, 200, "Logged out")
 }
