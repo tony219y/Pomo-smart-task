@@ -1,0 +1,12 @@
+package dto
+
+import "time"
+
+type CreateTaskRequest struct {
+	Title         string    `json:"title"`
+	Description   string    `json:"description"`
+	Status        string    `json:"status"`
+	Priority      string    `json:"priority"`
+	DueDate       time.Time `json:"dueDate"`
+	EstimatedTime int       `json:"estimatedTime"`
+}
