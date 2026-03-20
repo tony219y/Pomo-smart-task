@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"os"
 	"strings"
 	"time"
@@ -59,12 +60,16 @@ func JWTMiddleware(c fiber.Ctx) error {
 	if !ok {
 		return response.Error(c, fiber.StatusUnauthorized, "invalid token claims")
 	}
+	tokenType, ok := claims["type"].(string)
+	if !ok || tokenType != "access" {
+		return response.Error(c, fiber.StatusUnauthorized, "invalid token type")
+	}
 	c.Locals("role", roleRaw)
 
 	return c.Next()
 }
 
-func GenerateToken(id uint, role string) (string, string, error) {
+func GenerateTokens(id uint, role string) (string, string, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 
 	accessClaims := jwt.MapClaims{
@@ -80,7 +85,7 @@ func GenerateToken(id uint, role string) (string, string, error) {
 		"type":    "refresh",
 		"role":    role,
 		"jti":     uuid.NewString(),
-		"exp":     time.Now().Add(7 * 30 * time.Hour).Unix(),
+		"exp":     time.Now().Add(30 * 24 * time.Hour).Unix(),
 		"iat":     time.Now().Unix(),
 	}
 	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString([]byte(jwtSecret))
@@ -96,16 +101,32 @@ func GenerateToken(id uint, role string) (string, string, error) {
 	return accessToken, refreshToken, nil
 }
 
-func RefreshToken(tokenString string) string {
+func RefreshAccessToken(tokenString string) (string, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 
-	parsed, _ := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
+	parsed, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		return []byte(jwtSecret), nil
 	}, jwt.WithValidMethods([]string{"HS256"}))
+	if err != nil || !parsed.Valid {
+		return "", errors.New("invalid refresh token")
+	}
 
-	claims := parsed.Claims.(jwt.MapClaims)
-	userID := claims["user_id"].(float64)
-	role := claims["role"].(string)
+	claims, ok := parsed.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", errors.New("invalid refresh token claims")
+	}
+	tokenType, ok := claims["type"].(string)
+	if !ok || tokenType != "refresh" {
+		return "", errors.New("invalid token type")
+	}
+	userID, ok := claims["user_id"].(float64)
+	if !ok {
+		return "", errors.New("invalid refresh token claims")
+	}
+	role, ok := claims["role"].(string)
+	if !ok {
+		return "", errors.New("invalid refresh token claims")
+	}
 
 	accessClaims := jwt.MapClaims{
 		"user_id": userID,
@@ -115,7 +136,10 @@ func RefreshToken(tokenString string) string {
 		"iat":     time.Now().Unix(),
 	}
 
-	accessToken, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString([]byte(jwtSecret))
+	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString([]byte(jwtSecret))
+	if err != nil {
+		return "", err
+	}
 
-	return accessToken
+	return accessToken, nil
 }

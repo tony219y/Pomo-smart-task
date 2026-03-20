@@ -23,7 +23,7 @@ func (s *UserService) Login(email, password string) (string, string, string) {
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", "", "Incorrect username or password"
 	}
-	accessToken, refreshToken, err := middleware.GenerateToken(user.ID, user.Role)
+	accessToken, refreshToken, err := middleware.GenerateTokens(user.ID, user.Role)
 	if err != nil {
 		return "", "", "Generated token failed!"
 	}
@@ -56,6 +56,10 @@ func (s *UserService) GetUserByID(userId uint) (*model.UserResponse, error) {
 	return user, err
 }
 
-func (s *UserService) RefreshSession(token string) string {
-	return middleware.RefreshToken(token)
+func (s *UserService) RefreshSession(token string) (string, error) {
+	accessToken, err := middleware.RefreshAccessToken(token)
+	if err != nil {
+		return "", err
+	}
+	return accessToken, nil
 }
