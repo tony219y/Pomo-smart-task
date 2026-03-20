@@ -4,13 +4,40 @@ import { useTasks } from "@/features/dashboard/hooks/use-task"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Trash2 } from "lucide-react"
+import { useState } from "react"
+import { Task } from "@/features/dashboard/types/dashboard.types"
+import TaskDetailDialog from "@/features/dashboard/components/TaskDetailDialog"
 
 const DashboardPage = () => {
   const { tasks, isLoadingTasks, updateTask, deleteTask } = useTasks();
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [openDetail, setOpenDetail] = useState(false);
 
   const handleToggleStatus = async (taskId: number, status: string) => {
     const nextStatus = status === "done" ? "todo" : "done";
     await updateTask({ taskId, data: { status: nextStatus } });
+  };
+
+  const handleSaveTaskDetail = async (
+    taskId: number,
+    payload: {
+      title: string;
+      description: string;
+      priority: string;
+      dueDate: string;
+      estimatedTime: number;
+    },
+  ) => {
+    await updateTask({
+      taskId,
+      data: {
+        title: payload.title,
+        description: payload.description,
+        priority: payload.priority,
+        dueDate: payload.dueDate,
+        estimatedTime: payload.estimatedTime,
+      },
+    });
   };
 
   return (
@@ -50,6 +77,15 @@ const DashboardPage = () => {
                   <div className="flex items-center gap-2">
                     <Button
                       type="button"
+                      onClick={() => {
+                        setSelectedTask(task);
+                        setOpenDetail(true);
+                      }}
+                    >
+                      Details
+                    </Button>
+                    <Button
+                      type="button"
                       variant="outline"
                       onClick={() => handleToggleStatus(task.id, task.status)}
                     >
@@ -73,6 +109,12 @@ const DashboardPage = () => {
 
         </div>
       </main>
+      <TaskDetailDialog
+        open={openDetail}
+        task={selectedTask}
+        onOpenChange={setOpenDetail}
+        onSave={handleSaveTaskDetail}
+      />
     </div>
   )
 }

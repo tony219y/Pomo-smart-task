@@ -4,6 +4,7 @@ import (
 	"github.com/tony219y/pomo-smart-task-api/internal/dto"
 	"github.com/tony219y/pomo-smart-task-api/internal/model"
 	"github.com/tony219y/pomo-smart-task-api/internal/repository"
+	"time"
 )
 
 type TaskService struct {
@@ -41,7 +42,10 @@ func (s *TaskService) UpdateTask(userID uint, taskID uint, req *dto.UpdateTaskRe
 		updates["priority"] = *req.Priority
 	}
 	if req.DueDate != nil {
-		updates["due_date"] = *req.DueDate
+		parsedDate, err := time.Parse(time.RFC3339, *req.DueDate)
+		if err == nil {
+			updates["due_date"] = parsedDate
+		}
 	}
 	if req.EstimatedTime != nil {
 		updates["estimated_time"] = *req.EstimatedTime

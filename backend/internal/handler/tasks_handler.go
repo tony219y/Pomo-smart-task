@@ -2,6 +2,7 @@ package handler
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/tony219y/pomo-smart-task-api/internal/dto"
@@ -29,16 +30,21 @@ func (h *TaskHandler) Create(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
 	}
 
+	dueDate, err := parseDate(req.DueDate)
+	if err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "invalid due date")
+	}
+
 	task := &model.Task{
 		Title:         req.Title,
 		Description:   req.Description,
 		Status:        req.Status,
 		Priority:      req.Priority,
-		DueDate:       req.DueDate,
+		DueDate:       dueDate,
 		EstimatedTime: req.EstimatedTime,
 	}
 
-	_, err := h.service.CreateTask(task, userID)
+	_, err = h.service.CreateTask(task, userID)
 	if err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "create task failed")
 	}
@@ -95,6 +101,15 @@ func (h *TaskHandler) Update(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
 	}
 
+	if req.DueDate != nil {
+		parsedDate, err := parseDate(*req.DueDate)
+		if err != nil {
+			return response.Error(c, fiber.StatusBadRequest, "invalid due date")
+		}
+		normalized := parsedDate.Format(time.RFC3339)
+		req.DueDate = &normalized
+	}
+
 	task, err := h.service.UpdateTask(userID, uint(taskID), req)
 	if err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "update task failed")
@@ -119,4 +134,16 @@ func (h *TaskHandler) Delete(c fiber.Ctx) error {
 	}
 
 	return response.Message(c, fiber.StatusOK, "delete task successfully")
+}
+
+func parseDate(raw string) (time.Time, error) {
+	if raw == "" {
+		return time.Time{}, nil
+	}
+
+	if t, err := time.Parse(time.RFC3339, raw); err == nil {
+		return t, nil
+	}
+
+	return time.Parse("2006-01-02", raw)
 }

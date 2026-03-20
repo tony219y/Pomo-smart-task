@@ -6,7 +6,7 @@ import {
   GetTasks,
   UpdateTask,
 } from "../services/dashboard.service";
-import { Task, TasksProps } from "../types/dashboard.types";
+import { Task, TasksProps, UpdateTaskPayload } from "../types/dashboard.types";
 
 export const useTasks = () => {
   const queryClient = useQueryClient();
@@ -31,7 +31,7 @@ export const useTasks = () => {
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: async (payload: { taskId: number; data: { status?: string } }) => {
+    mutationFn: async (payload: { taskId: number; data: UpdateTaskPayload }) => {
       const response = await UpdateTask(payload.taskId, payload.data);
       return response.data;
     },
