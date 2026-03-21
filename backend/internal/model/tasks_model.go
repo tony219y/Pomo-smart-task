@@ -16,6 +16,7 @@ type Task struct {
 	Priority      string    `json:"priority" gorm:"type:varchar(20);default:'low'"`
 	DueDate       time.Time `json:"dueDate"`
 	EstimatedTime int       `json:"estimatedTime"`
+	Tags          []Tags    `gorm:"many2many:task_tags" json:"tags"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	DeletedAt     gorm.DeletedAt `gorm:"index"`

@@ -17,7 +17,10 @@ func ConnectNeon() *gorm.DB {
 		panic("DATABASE_URL environment variable is not set")
 	}
 
-	db, err := gorm.Open(postgres.Open(connectStr), &gorm.Config{})
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		DSN:                  connectStr,
+		PreferSimpleProtocol: true,
+	}), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
