@@ -14,8 +14,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Tag as TagIcon } from "lucide-react";
-import { useTags } from "../hooks/use-tags";
-import { useTasks } from "../hooks/use-task";
+import { useTags } from "../hooks/useTags";
+import { useTasks } from "../hooks/useTask";
 import { Tags } from "../types/dashboard.types";
 
 const CreateTask = () => {

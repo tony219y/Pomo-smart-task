@@ -17,6 +17,7 @@ export interface Task {
   priority: "low" | "medium" | "high" | string;
   dueDate: string;
   estimatedTime: number;
+  tags?: Tags[];
 }
 
 export interface UpdateTaskPayload {

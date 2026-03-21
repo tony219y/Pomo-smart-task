@@ -10,7 +10,7 @@ const AppNavbar = () => {
     <nav className="sticky top-0 z-50 flex h-16 border-b border-[#e6edf3] bg-white px-6 items-center justify-between">
       <header>
         <div className="flex h-full items-center">
-          <h1 className="text-[33px] font-black tracking-tight text-[#1d2939]">My Daily Focus</h1>
+          <h1 className="text-xl font-black tracking-tight text-[#1d2939]">My Daily Focus</h1>
           <div className="mx-5 h-6 w-px bg-[#d9e2ea]" />
           <h1 className="text-sm text-[#8b99a8]">
             {new Date().toLocaleDateString("en-US", {
