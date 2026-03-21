@@ -1,8 +1,12 @@
 package handler
 
 import (
+	"os"
+	"time"
+
 	"github.com/gofiber/fiber/v3"
-	"github.com/tony219y/pomo-smart-task-api/internal/model"
+	"github.com/tony219y/pomo-smart-task-api/internal/dto"
+	"github.com/tony219y/pomo-smart-task-api/internal/response"
 	"github.com/tony219y/pomo-smart-task-api/internal/service"
 )
 
@@ -15,50 +19,114 @@ func NewUserHandler(service *service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) CreateUser(c fiber.Ctx) error {
-
-	req := new(model.RegisterReq)
+	req := new(dto.RegisterRequest)
 	if err := c.Bind().Body(req); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
 	}
 
 	_, err := h.service.Register(req.Email, req.Username, req.Password)
 	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
 	}
-	return c.Status(201).JSON(fiber.Map{"message": "create user successfully!"})
+
+	return response.Message(c, fiber.StatusCreated, "create user successfully")
 }
 
 func (h *UserHandler) UserLogin(c fiber.Ctx) error {
-
-	req := new(model.LoginReq)
+	req := new(dto.LoginRequest)
 	if err := c.Bind().Body(req); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
 	}
 
-	token, err := h.service.Login(req.Email, req.Password)
-	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+	accessToken, refreshToken, errMsg := h.service.Login(req.Email, req.Password)
+	if errMsg != "" {
+		return response.Error(c, fiber.StatusBadRequest, errMsg)
 	}
-	return c.Status(200).JSON(fiber.Map{
-		"token": token,
+
+	secureCookie := os.Getenv("APP_ENV") == "production"
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Expires:  time.Now().Add(30 * 24 * time.Hour),
+		HTTPOnly: true,
+		SameSite: "Lax",
+		Secure:   secureCookie,
+		Path:     "/",
+	})
+
+	return c.Status(fiber.StatusOK).JSON(dto.LoginResponse{
+		AccessToken: accessToken,
 	})
 }
 
 func (h *UserHandler) GetAllUser(c fiber.Ctx) error {
-
 	roleRaw := c.Locals("role")
-
 	if roleRaw == nil {
-		return c.Status(401).JSON(fiber.Map{"message": "Login required"})
+		return response.Error(c, fiber.StatusUnauthorized, "login required")
 	}
 
 	role, ok := roleRaw.(string)
 	if !ok || role != "admin" {
-		return c.Status(403).JSON(fiber.Map{"message": "Access denied"})
+		return response.Error(c, fiber.StatusForbidden, "access denied")
 	}
+
 	users, err := h.service.GetAllUser()
 	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"message": err.Error()})
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
 	}
 	return c.JSON(users)
+}
+
+func (h *UserHandler) RefreshToken(c fiber.Ctx) error {
+	refreshToken := c.Cookies("refresh_token")
+	if refreshToken == "" {
+		return response.Error(c, fiber.StatusUnauthorized, "missing refresh token")
+	}
+
+	accessToken, newRefreshToken, err := h.service.RefreshSession(refreshToken)
+	if err != nil {
+		return response.Error(c, fiber.StatusUnauthorized, "invalid refresh token")
+	}
+
+	secureCookie := os.Getenv("APP_ENV") == "production"
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    newRefreshToken,
+		Expires:  time.Now().Add(30 * 24 * time.Hour),
+		HTTPOnly: true,
+		SameSite: "Lax",
+		Secure:   secureCookie,
+		Path:     "/",
+	})
+
+	return c.Status(fiber.StatusOK).JSON(dto.RefreshResponse{
+		AccessToken: accessToken,
+	})
+}
+func (h *UserHandler) Me(c fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+	user, err := h.service.GetUserByID(userID)
+	if err != nil {
+		return response.Error(c, fiber.StatusNotFound, "user not found")
+	}
+
+	return c.JSON(user)
+}
+func (h *UserHandler) Logout(c fiber.Ctx) error {
+	refreshToken := c.Cookies("refresh_token")
+	if refreshToken != "" {
+		_ = h.service.RevokeSession(refreshToken)
+	}
+
+	secureCookie := os.Getenv("APP_ENV") == "production"
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour),
+		HTTPOnly: true,
+		SameSite: "Lax",
+		Secure:   secureCookie,
+		Path:     "/",
+	})
+	return response.Message(c, 200, "Logged out")
 }

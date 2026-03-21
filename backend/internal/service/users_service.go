@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/tony219y/pomo-smart-task-api/internal/middleware"
 	"github.com/tony219y/pomo-smart-task-api/internal/model"
 	"github.com/tony219y/pomo-smart-task-api/internal/repository"
@@ -15,20 +17,22 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) Login(email, password string) (string, error) {
+func (s *UserService) Login(email, password string) (string, string, string) {
 	user, err := s.repo.FindByEmail(email)
 	if err != nil {
-		return "", err
+		return "", "", "Incorrect username or password"
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return "", err
+		return "", "", "Incorrect username or password"
 	}
-	// token jwt
-	token, err := middleware.GenerateToken(user.ID, user.Role)
+	accessToken, refreshToken, refreshJTI, refreshExpiresAt, err := middleware.GenerateTokens(user.ID, user.Role)
 	if err != nil {
-		return "", err
+		return "", "", "Generated token failed!"
 	}
-	return token, nil
+	if err := s.repo.SaveRefreshToken(user.ID, refreshJTI, refreshExpiresAt); err != nil {
+		return "", "", "Generated token failed!"
+	}
+	return accessToken, refreshToken, ""
 }
 func (s *UserService) Register(email, username, password string) (*model.Users, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -51,4 +55,45 @@ func (s *UserService) Register(email, username, password string) (*model.Users, 
 
 func (s *UserService) GetAllUser() ([]model.UserResponse, error) {
 	return s.repo.FindAll()
+}
+func (s *UserService) GetUserByID(userId uint) (*model.UserResponse, error) {
+	user, err := s.repo.GetUserByID(userId)
+	return user, err
+}
+
+func (s *UserService) RefreshSession(token string) (string, string, error) {
+	claims, err := middleware.ParseRefreshToken(token)
+	if err != nil {
+		return "", "", err
+	}
+
+	active, err := s.repo.IsRefreshTokenActive(claims.JTI)
+	if err != nil {
+		return "", "", err
+	}
+	if !active {
+		return "", "", errors.New("refresh token revoked")
+	}
+
+	if err := s.repo.RevokeRefreshToken(claims.JTI); err != nil {
+		return "", "", err
+	}
+
+	newAccess, newRefresh, newJTI, newExpiresAt, err := middleware.GenerateTokens(claims.UserID, claims.Role)
+	if err != nil {
+		return "", "", err
+	}
+	if err := s.repo.SaveRefreshToken(claims.UserID, newJTI, newExpiresAt); err != nil {
+		return "", "", err
+	}
+
+	return newAccess, newRefresh, nil
+}
+
+func (s *UserService) RevokeSession(token string) error {
+	claims, err := middleware.ParseRefreshToken(token)
+	if err != nil {
+		return nil
+	}
+	return s.repo.RevokeRefreshToken(claims.JTI)
 }
