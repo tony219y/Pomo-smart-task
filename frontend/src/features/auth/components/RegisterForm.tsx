@@ -63,10 +63,10 @@ const RegisterForm = () => {
           <p className="text-red-500 text-sm">{errors.confirmPassword.message}</p>
         )}
       </div>
-      <Link href="/login" className="flex w-full justify-end my-2 text-[#28AF60] hover:underline">I have an account.</Link>
+      <Link href="/login" className="my-2 flex w-full justify-end text-primary hover:underline">I have an account.</Link>
       <Button
         disabled={isLoading}
-        className="w-full bg-[#28AF60] hover:bg-[#28AF60]/80 mt-2"
+        className="mt-2 w-full bg-primary text-primary-foreground hover:bg-primary/80"
         type="submit"
       >
         {isLoading ? "Signing in..." : "Sign in"}

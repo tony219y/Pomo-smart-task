@@ -48,11 +48,11 @@ const LoginForm = () => {
                     <p className="text-red-500 text-sm">{errors.password.message}</p>
                 )}
             </div>
-            <Link href="/register" className="flex w-full justify-end my-2 text-[#28AF60] hover:underline">I don't have an account.</Link>
+            <Link href="/register" className="my-2 flex w-full justify-end text-primary hover:underline">I don't have an account.</Link>
 
             <Button
                 disabled={isLoading}
-                className="w-full bg-[#28AF60] hover:bg-[#28AF60]/80"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/80"
                 type="submit"
             >
                 {isLoading ? "Signing in..." : "Sign in"}

@@ -96,12 +96,12 @@ const DashboardPage = () => {
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-4">
           <CreateTask />
-          <div className="rounded-2xl border border-[#dce5ee] bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-[#e7edf3] px-5 py-4">
-              <h2 className="text-xl font-bold text-[#17263b]">Active Tasks</h2>
+          <div className="rounded-2xl border border-border bg-card shadow-sm">
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+              <h2 className="text-xl font-bold text-foreground">Active Tasks</h2>
               <div className="flex gap-2 text-xs">
                 <button
-                  className={`rounded-full px-4 py-2 ${selectedTagId === null ? "bg-[#2fad66] text-white" : "text-[#7d8ca0]"}`}
+                  className={`rounded-full px-4 py-2 ${selectedTagId === null ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
                   onClick={() => setSelectedTagId(null)}
                 >
                   ALL
@@ -109,7 +109,7 @@ const DashboardPage = () => {
                 {tags.map((tag: Tags) => (
                   <button
                     key={tag.id}
-                    className={`rounded-full px-4 py-2 ${selectedTagId === tag.id ? "bg-[#2fad66] text-white" : "text-[#7d8ca0]"}`}
+                    className={`rounded-full px-4 py-2 ${selectedTagId === tag.id ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
                     onClick={() => setSelectedTagId(tag.id)}
                   >
                     {tag.name.toUpperCase()}
@@ -118,11 +118,11 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            <div className="divide-y divide-[#edf2f7]">
+            <div className="divide-y divide-border">
               {isLoadingTasks ? (
-                <p className="p-5 text-sm text-[#8da0b2]">Loading tasks...</p>
+                <p className="p-5 text-sm text-muted-foreground">Loading tasks...</p>
               ) : filteredTasks.length === 0 ? (
-                <p className="p-5 text-sm text-[#8da0b2]">
+                <p className="p-5 text-sm text-muted-foreground">
                   No tasks found for this tag.
                 </p>
               ) : (
@@ -133,32 +133,32 @@ const DashboardPage = () => {
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-[#162337]">
+                        <h3 className="font-semibold text-foreground">
                           {task.title}
                         </h3>
                         <Badge
-                          className="rounded-md border-0 bg-[#e7f4eb] text-[#2fad66]"
+                          className="rounded-md border-0 bg-primary/15 text-primary"
                           variant="secondary"
                         >
                           {task.priority.toUpperCase()}
                         </Badge>
                       </div>
-                      <p className="text-sm text-[#8ea0b3]">
+                      <p className="text-sm text-muted-foreground">
                         {task.description || "No description"} - Est.{" "}
                         {task.estimatedTime} min
                       </p>
-                      <p className="text-xs text-[#adb8c4]">
+                      <p className="text-xs text-muted-foreground">
                         Due:{" "}
                         {task.dueDate
                           ? new Date(task.dueDate).toLocaleDateString()
                           : "No deadline"}
                       </p>
-                      <div className="text-xs text-[#adb8c4] flex gap-2 flex-wrap">
+                      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                         {task.tags?.length ? (
                           task.tags.map((t) => (
                             <span
                               key={t.id}
-                              className="rounded bg-[#eef3f7] px-2 py-1"
+                              className="rounded bg-secondary px-2 py-1 text-secondary-foreground"
                             >
                               {t?.name}
                             </span>
@@ -185,7 +185,7 @@ const DashboardPage = () => {
                       <Button
                         type="button"
                         size="sm"
-                        className="rounded-lg bg-[#eff4f9] text-[#324a62] hover:bg-[#e3ebf3]"
+                        className="rounded-lg bg-secondary text-secondary-foreground hover:bg-accent"
                         onClick={() => openTaskDetail(task)}
                       >
                         Details

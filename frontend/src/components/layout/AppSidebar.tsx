@@ -54,26 +54,26 @@ const AppSidebar = () => {
   ];
   const { toggleSidebar, open } = useSidebar();
   return (
-    <Sidebar collapsible="icon" className="border-r border-[#dce2e8] bg-[#f7f9fb]">
-      <SidebarHeader className="min-h-18 flex justify-center border-b border-[#e7edf3]">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
+      <SidebarHeader className="min-h-18 flex justify-center border-b border-sidebar-border">
         <div
           className={`flex w-full ${open ? "justify-end" : "justify-center"}`}
         >
           <div
             className={`${open ? "flex" : "hidden"} items-center mr-auto gap-3 px-3`}
           >
-            <strong className="flex size-9 items-center justify-center rounded-xl bg-[#2fad66] shadow-sm">
+            <strong className="flex size-9 items-center justify-center rounded-xl bg-sidebar-primary shadow-sm">
               <Bolt color="white" size={16} />
             </strong>
             <div className="flex flex-col text-nowrap leading-tight">
-              <b className="text-[#1f2a37]">TaskMaster</b>
-              <small className="text-[#7e8b98]">Pro Workspace</small>
+              <b className="text-sidebar-foreground">TaskMaster</b>
+              <small className="text-muted-foreground">Pro Workspace</small>
             </div>
           </div>
           {open ? (
-            <X onClick={toggleSidebar} className="mt-1 cursor-pointer text-[#8a97a6]" />
+            <X onClick={toggleSidebar} className="mt-1 cursor-pointer text-muted-foreground" />
           ) : (
-            <Menu onClick={toggleSidebar} className="mt-1 cursor-pointer text-[#8a97a6]" />
+            <Menu onClick={toggleSidebar} className="mt-1 cursor-pointer text-muted-foreground" />
           )}
         </div>
       </SidebarHeader>
@@ -87,7 +87,7 @@ const AppSidebar = () => {
                 key={idx}
                 asChild
                 isActive={pathname === project.url}
-                className="h-11 rounded-xl text-[15px] text-[#526374] data-[active=true]:bg-[#e0efe6] data-[active=true]:text-[#2fad66]"
+                className="h-11 rounded-xl text-[15px] text-sidebar-foreground/80 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-primary"
               >
                 <Link href={project.url} className="px-3">
                   <Icon size={18} />
@@ -98,7 +98,7 @@ const AppSidebar = () => {
           })}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="px-4 pb-4 text-xs text-[#9aa7b4]">Smart Task Manager Website</SidebarFooter>
+      <SidebarFooter className="px-4 pb-4 text-xs text-muted-foreground">Smart Task Manager Website</SidebarFooter>
     </Sidebar>
   );
 };
