@@ -14,7 +14,7 @@ import {
   Bolt,
   ChartColumnIncreasing,
   ClipboardList,
-  Folder,
+  Clock,
   LayoutDashboard,
   Menu,
   Settings,
@@ -37,20 +37,20 @@ const AppSidebar = () => {
       icon: ClipboardList,
     },
     {
-      name: "Projects",
-      url: "/projects",
-      icon: Folder,
+      name: "Pomodoro",
+      url: "/pomodoro",
+      icon: Clock,
     },
-    {
-      name: "Analytics",
-      url: "/analytics",
-      icon: ChartColumnIncreasing,
-    },
-    {
-      name: "Settings",
-      url: "/settings",
-      icon: Settings,
-    },
+    // {
+    //   name: "Analytics",
+    //   url: "/analytics",
+    //   icon: ChartColumnIncreasing,
+    // },
+    // {
+    //   name: "Settings",
+    //   url: "/settings",
+    //   icon: Settings,
+    // },
   ];
   const { toggleSidebar, open } = useSidebar();
   return (
@@ -98,7 +98,6 @@ const AppSidebar = () => {
           })}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="px-4 pb-4 text-xs text-muted-foreground">Smart Task Manager Website</SidebarFooter>
     </Sidebar>
   );
 };
