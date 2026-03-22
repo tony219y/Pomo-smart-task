@@ -6,7 +6,7 @@ type Tags struct {
 	UserID uint  `gorm:"uniqueIndex:idx_user_tag_name" json:"userId"`
 	User   Users `gorm:"foreignKey:UserID" json:"-"`
 
-	Name string `gorm:"size:100; not null; uniqueIndex:idx_user_tag_name"`
+	Name string `gorm:"size:100; not null; uniqueIndex:idx_user_tag_name" json:"name"`
 }
 
 type TagResponse struct {

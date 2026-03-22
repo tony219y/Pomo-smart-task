@@ -44,7 +44,7 @@ func (h *TaskHandler) Create(c fiber.Ctx) error {
 		EstimatedTime: req.EstimatedTime,
 	}
 
-	_, err = h.service.CreateTask(task, userID)
+	_, err = h.service.CreateTask(task, userID, req.TagIDs)
 	if err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "create task failed")
 	}

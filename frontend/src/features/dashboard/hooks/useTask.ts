@@ -17,6 +17,9 @@ export const useTasks = () => {
       const response = await GetTasks();
       return response.data as Task[];
     },
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   const createTaskMutation = useMutation({

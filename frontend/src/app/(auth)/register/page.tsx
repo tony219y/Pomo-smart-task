@@ -9,7 +9,7 @@ import RegisterForm from "@/features/auth/components/RegisterForm"
 
 const RegisterPage = () => {
     return (
-        <div className="flex justify-center items-center w-full h-screen bg-[#1c1c1c]">
+        <div className="flex justify-center items-center w-full h-screen bg-background">
             <Card className="mx-auto w-full max-w-xs" >
                 <CardHeader>
                     <CardTitle className="text-center font-black text-3xl">Hello Welcome!</CardTitle>
