@@ -176,7 +176,7 @@ const CreateTask = () => {
                 <TagIcon size={14} /> Tags
               </label>
 
-              <div className="max-h-40 w-full overflow-y-auto bg-muted/30">
+              <div className="flex gap-3 max-h-40 w-full overflow-y-auto ">
                 {isLoadingTags ? (
                   <p className="text-xs opacity-50 animate-pulse">
                     Loading tags...
