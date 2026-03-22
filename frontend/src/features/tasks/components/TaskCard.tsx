@@ -1,8 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import TaskDetailDialog from "@/features/dashboard/components/TaskDetailDialog";
 import { useTasks } from "@/features/dashboard/hooks/useTask";
 import { Task } from "@/features/dashboard/types/dashboard.types";
-import { Calendar, ChevronDown, Dot } from "lucide-react";
+import { Calendar, ChevronDown, Edit } from "lucide-react";
 import { useState } from "react";
 
 interface TaskCardProps {
@@ -11,7 +12,9 @@ interface TaskCardProps {
 
 const TaskCard = ({ tasks }: TaskCardProps) => {
   const [openTasks, setOpenTasks] = useState<Record<string, boolean>>({});
-  const { isLoadingTasks, updateTask, deleteTask } = useTasks();
+  const [openDetail, setOpenDetail] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const { updateTask } = useTasks();
 
   const handleToggleStatus = async (taskId: number, status: string) => {
     await updateTask({ taskId, data: { status: status } });
@@ -22,6 +25,24 @@ const TaskCard = ({ tasks }: TaskCardProps) => {
       ...prev,
       [taskId]: !prev[taskId],
     }));
+  };
+
+  const handleOpenTaskDetail = (task: Task) => {
+    setSelectedTask(task);
+    setOpenDetail(true);
+  };
+
+  const handleSaveTaskDetail = async (
+    taskId: number,
+    payload: {
+      title: string;
+      description: string;
+      priority: string;
+      dueDate: string;
+      estimatedTime: number;
+    },
+  ) => {
+    await updateTask({ taskId, data: payload });
   };
 
   const getPriorityClass = (priority: string) => {
@@ -97,16 +118,24 @@ const TaskCard = ({ tasks }: TaskCardProps) => {
                 </div>
               </div>
 
-              <button
-                onClick={() => handleToggle(String(task.id))}
-                className="transition-transform duration-300"
-              >
-                <ChevronDown
-                  className={`transition-transform duration-300 ${
-                    isOpen ? "rotate-180" : "rotate-0"
-                  }`}
-                />
-              </button>
+              <div className="space-x-5">
+                <button
+                  onClick={() => handleToggle(String(task.id))}
+                  className="transition-transform duration-300"
+                >
+                  <ChevronDown
+                    className={`transition-transform duration-300 ${
+                      isOpen ? "rotate-180" : "rotate-0"
+                    }`}
+                  />
+                </button>
+                <button
+                  onClick={() => handleOpenTaskDetail(task)}
+                  className="transition-transform duration-300"
+                >
+                  <Edit />
+                </button>
+              </div>
             </div>
             <div
               className={`rounded-md bg-black/30 p-2 overflow-hidden transition-all duration-300 ease-in-out ${
@@ -142,6 +171,12 @@ const TaskCard = ({ tasks }: TaskCardProps) => {
           </div>
         );
       })}
+      <TaskDetailDialog
+        open={openDetail}
+        task={selectedTask}
+        onOpenChange={setOpenDetail}
+        onSave={handleSaveTaskDetail}
+      />
     </>
   );
 };
