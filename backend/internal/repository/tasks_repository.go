@@ -13,10 +13,11 @@ func NewTaskRepository(db *gorm.DB) *TaskRepository {
 	return &TaskRepository{db: db}
 }
 
-func (r *TaskRepository) FindAll(userID uint) ([]model.TaskResponse, error) {
-	var tasks []model.TaskResponse
+func (r *TaskRepository) FindAll(userID uint) ([]model.Task, error) {
+	var tasks []model.Task
 
-	err := r.db.Model(&model.Task{}).
+	err := r.db.
+		Preload("Tags").
 		Where("user_id = ?", userID).
 		Order("created_at DESC").
 		Find(&tasks).Error
@@ -27,10 +28,11 @@ func (r *TaskRepository) FindAll(userID uint) ([]model.TaskResponse, error) {
 	return tasks, nil
 }
 
-func (r *TaskRepository) FindByID(userID uint, taskID uint) (*model.TaskResponse, error) {
-	var task model.TaskResponse
+func (r *TaskRepository) FindByID(userID uint, taskID uint) (*model.Task, error) {
+	var task model.Task
 
-	err := r.db.Model(&model.Task{}).
+	err := r.db.
+		Preload("Tags").
 		Where("user_id = ? AND id = ?", userID, taskID).
 		First(&task).Error
 	if err != nil {
@@ -40,7 +42,7 @@ func (r *TaskRepository) FindByID(userID uint, taskID uint) (*model.TaskResponse
 	return &task, nil
 }
 
-func (r *TaskRepository) Create(newtask *model.Task, userID uint) (*model.Task, error) {
+func (r *TaskRepository) Create(newtask *model.Task, userID uint, tagIDs []uint) (*model.Task, error) {
 	task := model.Task{
 		UserID:        userID,
 		Title:         newtask.Title,
@@ -53,6 +55,19 @@ func (r *TaskRepository) Create(newtask *model.Task, userID uint) (*model.Task, 
 	if err := r.db.Create(&task).Error; err != nil {
 		return nil, err
 	}
+
+	if len(tagIDs) > 0 {
+		var tags []model.Tags
+		if err := r.db.Where("user_id = ? AND id IN ?", userID, tagIDs).Find(&tags).Error; err != nil {
+			return nil, err
+		}
+		if len(tags) > 0 {
+			if err := r.db.Model(&task).Association("Tags").Replace(tags); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	return &task, nil
 }
 

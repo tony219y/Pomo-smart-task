@@ -7,6 +7,7 @@ type CreateTaskRequest struct {
 	Priority      string `json:"priority"`
 	DueDate       string `json:"dueDate"`
 	EstimatedTime int    `json:"estimatedTime"`
+	TagIDs        []uint `json:"tagIds"`
 }
 
 type UpdateTaskRequest struct {

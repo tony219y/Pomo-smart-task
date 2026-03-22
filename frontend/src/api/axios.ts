@@ -3,6 +3,10 @@ import axios, { type InternalAxiosRequestConfig } from "axios";
 
 const base_api = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+type RetriableRequest = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+};
+
 const api = axios.create({
   baseURL: base_api,
   timeout: 10000,
@@ -11,18 +15,6 @@ const api = axios.create({
   },
   withCredentials: true,
 });
-
-let isRefreshing = false;
-let pendingQueue: Array<(token: string | null) => void> = [];
-
-type RetriableRequest = InternalAxiosRequestConfig & {
-  _retry?: boolean;
-};
-
-function flushQueue(token: string | null) {
-  pendingQueue.forEach((resolve) => resolve(token));
-  pendingQueue = [];
-}
 
 api.interceptors.request.use(
   (config) => {
@@ -41,57 +33,37 @@ api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
     const originalRequest = (error.config ?? {}) as RetriableRequest;
     const status = error.response?.status;
+    const isRefreshRequest = String(originalRequest.url || "").includes(
+      "/auth/refresh",
+    );
 
-    if (
-      status === 401 &&
-      !originalRequest._retry &&
-      !String(originalRequest.url || "").includes("/auth/refresh")
-    ) {
+    if (status === 401 && !originalRequest._retry && !isRefreshRequest) {
       originalRequest._retry = true;
 
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          pendingQueue.push((newToken) => {
-            if (!newToken) {
-              reject(error);
-              return;
-            }
-            originalRequest.headers = originalRequest.headers ?? {};
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            resolve(api(originalRequest));
-          });
-        });
+      try {
+        const res = await axios.post(
+          `${base_api}/auth/refresh`,
+          {},
+          { withCredentials: true },
+        );
+        const newToken = res.data?.accessToken ?? null;
+
+        if (!newToken) {
+          throw error;
+        }
+
+        useAuthStore.getState().setAccessToken(newToken);
+        originalRequest.headers = originalRequest.headers ?? {};
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+        return api(originalRequest);
+      } catch {
+        useAuthStore.getState().logout();
+        window.location.href = "/login";
       }
-
-      isRefreshing = true;
-
-      return axios
-        .post(`${base_api}/auth/refresh`, {}, { withCredentials: true })
-        .then((res) => {
-          const newToken = res.data?.accessToken ?? null;
-          useAuthStore.getState().setAccessToken(newToken);
-          flushQueue(newToken);
-
-          if (!newToken) {
-            throw error;
-          }
-
-          originalRequest.headers = originalRequest.headers ?? {};
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return api(originalRequest);
-        })
-        .catch((refreshError) => {
-          flushQueue(null);
-          useAuthStore.getState().logout();
-          window.location.href = "/login";
-          return Promise.reject(refreshError);
-        })
-        .finally(() => {
-          isRefreshing = false;
-        });
     }
 
     const customError = {
