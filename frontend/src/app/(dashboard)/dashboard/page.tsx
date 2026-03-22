@@ -1,4 +1,4 @@
-"use client";
+    "use client";
 import CreateTask from "@/features/dashboard/components/CreateTask";
 import { useTasks } from "@/features/dashboard/hooks/useTask";
 import { Button } from "@/components/ui/button";
@@ -98,7 +98,9 @@ const DashboardPage = () => {
           <CreateTask />
           <div className="rounded-2xl border border-border bg-card shadow-sm">
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <h2 className="text-xl font-bold text-foreground">Active Tasks</h2>
+              <h2 className="text-xl font-bold text-foreground">
+                Active Tasks
+              </h2>
               <div className="flex gap-2 text-xs">
                 <button
                   className={`rounded-full px-4 py-2 ${selectedTagId === null ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
@@ -120,7 +122,9 @@ const DashboardPage = () => {
 
             <div className="divide-y divide-border">
               {isLoadingTasks ? (
-                <p className="p-5 text-sm text-muted-foreground">Loading tasks...</p>
+                <p className="p-5 text-sm text-muted-foreground">
+                  Loading tasks...
+                </p>
               ) : filteredTasks.length === 0 ? (
                 <p className="p-5 text-sm text-muted-foreground">
                   No tasks found for this tag.

@@ -5,7 +5,7 @@ import { Pause, Play, StepForward } from "lucide-react";
 import { useTasks } from "../hooks/useTask";
 
 interface PomodoroTimerProps {
-  focusedTask: Task | null;
+  focusedTask?: Task | null;
   handleChangeMode: (nextMode: TimerMode) => void;
   mode: TimerMode;
   timeDisplay: string;
@@ -36,14 +36,16 @@ const PomodoroTimer = ({
   };
   return (
     <aside className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <div className="mb-4 rounded-xl border border-border bg-secondary p-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          Current Task
-        </p>
-        <p className="mt-1 text-sm font-semibold text-foreground">
-          {focusedTask ? focusedTask.title : "Select a task to focus"}
-        </p>
-      </div>
+      {focusedTask && (
+        <div className="mb-4 rounded-xl border border-border bg-secondary p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            Current Task
+          </p>
+          <p className="mt-1 text-sm font-semibold text-foreground">
+            {focusedTask ? focusedTask.title : "Select a task to focus"}
+          </p>
+        </div>
+      )}
       <div className="mx-auto flex w-fit rounded-full bg-secondary p-1 text-xs font-semibold">
         <button
           className={`rounded-full px-4 py-2 ${mode === "focus" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
