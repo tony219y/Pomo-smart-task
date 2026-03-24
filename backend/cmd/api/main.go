@@ -46,9 +46,13 @@ func buildHandlers(database *gorm.DB) routes.Handlers {
 	taskService := service.NewTaskService(taskRepo)
 	taskHandler := handler.NewTaskHandler(taskService)
 
+	reportService := service.NewReportService(taskRepo)
+	reportHandler := handler.NewReportHandler(reportService)
+
 	return routes.Handlers{
-		User: userHandler,
-		Tag:  tagHandler,
-		Task: taskHandler,
+		User:   userHandler,
+		Tag:    tagHandler,
+		Task:   taskHandler,
+		Report: reportHandler,
 	}
 }

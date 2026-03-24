@@ -7,9 +7,10 @@ import (
 )
 
 type Handlers struct {
-	User *handler.UserHandler
-	Tag  *handler.TagHandler
-	Task *handler.TaskHandler
+	User   *handler.UserHandler
+	Tag    *handler.TagHandler
+	Task   *handler.TaskHandler
+	Report *handler.ReportHandler
 }
 
 func Register(app *fiber.App, handlers Handlers) {
@@ -21,4 +22,5 @@ func Register(app *fiber.App, handlers Handlers) {
 	registerUserRoutes(protected, handlers.User)
 	registerTagRoutes(protected, handlers.Tag)
 	registerTaskRoutes(protected, handlers.Task)
+	registerReportRoutes(protected, handlers.Report)
 }
