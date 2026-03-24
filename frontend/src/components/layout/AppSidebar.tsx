@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
 import {
+  BarChart3,
   Bolt,
   ClipboardList,
   Clock,
@@ -48,6 +49,11 @@ const AppSidebar = () => {
       name: "Pomodoro",
       url: "/pomodoro",
       icon: Clock,
+    },
+    {
+      name: "Reports",
+      url: "/reports",
+      icon: BarChart3,
     },
   ];
   const { toggleSidebar, open } = useSidebar();
