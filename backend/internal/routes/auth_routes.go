@@ -25,4 +25,7 @@ func registerAuthRoutes(v1 fiber.Router, userHandler *handler.UserHandler) {
 		},
 	}), userHandler.RefreshToken)
 	auth.Post("/logout", userHandler.Logout)
+
+	auth.Get("/google", userHandler.GoogleAuth)
+	auth.Get("/google/callback", userHandler.Callback)
 }

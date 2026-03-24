@@ -1,13 +1,16 @@
 package handler
 
 import (
+	"net/url"
 	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/tony219y/pomo-smart-task-api/auth"
 	"github.com/tony219y/pomo-smart-task-api/internal/dto"
 	"github.com/tony219y/pomo-smart-task-api/internal/response"
 	"github.com/tony219y/pomo-smart-task-api/internal/service"
+	"golang.org/x/oauth2"
 )
 
 type UserHandler struct {
@@ -129,4 +132,48 @@ func (h *UserHandler) Logout(c fiber.Ctx) error {
 		Path:     "/",
 	})
 	return response.Message(c, 200, "Logged out")
+}
+
+func (h *UserHandler) GoogleAuth(c fiber.Ctx) error {
+	path := auth.ConfigGoogle()
+	url := path.AuthCodeURL("state", oauth2.SetAuthURLParam("prompt", "select_account"))
+
+	return c.Redirect().To(url)
+}
+
+func (h *UserHandler) Callback(c fiber.Ctx) error {
+	code := c.Query("code")
+	if code == "" {
+		return response.Error(c, fiber.StatusBadRequest, "missing google authorization code")
+	}
+
+	token, err := auth.ConfigGoogle().Exchange(c.RequestCtx(), code)
+	if err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "failed to exchange google token")
+	}
+
+	email := auth.GetEmail(token.AccessToken)
+	accessToken, refreshToken, errMsg := h.service.LoginWithGoogle(email)
+	if errMsg != "" {
+		return response.Error(c, fiber.StatusBadRequest, errMsg)
+	}
+
+	secureCookie := os.Getenv("APP_ENV") == "production"
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Expires:  time.Now().Add(30 * 24 * time.Hour),
+		HTTPOnly: true,
+		SameSite: "Lax",
+		Secure:   secureCookie,
+		Path:     "/",
+	})
+
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000"
+	}
+
+	redirectURL := frontendURL + "/google/callback?accessToken=" + url.QueryEscape(accessToken)
+	return c.Redirect().To(redirectURL)
 }
