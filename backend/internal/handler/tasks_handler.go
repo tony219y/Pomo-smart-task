@@ -57,9 +57,9 @@ func (h *TaskHandler) Create(c fiber.Ctx) error {
 	_ = h.auditLogService.Create(dto.CreateAuditLogInput{
 		ActorID:    userID,
 		Action:     "task.create",
-		EntityType: "user",
-		EntityID:   &userID,
-		Metadata:   fmt.Sprintf("task created success. TaskID %d", taskCreated.ID),
+		EntityType: "task",
+		EntityID:   &taskCreated.ID,
+		Metadata:   fmt.Sprintf("created task: %s", taskCreated.Title),
 		IPAddress:  c.IP(),
 		UserAgent:  c.Get("User-Agent"),
 	})
@@ -130,12 +130,19 @@ func (h *TaskHandler) Update(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, "update task failed")
 	}
 
+	action := "task.update"
+	metadata := fmt.Sprintf("updated task: %s", task.Title)
+	if req.Status != nil {
+		action = "task.status_update"
+		metadata = fmt.Sprintf("changed task status to %s", *req.Status)
+	}
+
 	_ = h.auditLogService.Create(dto.CreateAuditLogInput{
 		ActorID:    userID,
-		Action:     "task.update",
-		EntityType: "user",
-		EntityID:   &userID,
-		Metadata:   fmt.Sprintf("user updated success. TaskID %d", taskID),
+		Action:     action,
+		EntityType: "task",
+		EntityID:   &task.ID,
+		Metadata:   metadata,
 		IPAddress:  c.IP(),
 		UserAgent:  c.Get("User-Agent"),
 	})
@@ -158,12 +165,13 @@ func (h *TaskHandler) Delete(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusNotFound, "task not found")
 	}
 
+	deletedTaskID := uint(taskID)
 	_ = h.auditLogService.Create(dto.CreateAuditLogInput{
 		ActorID:    userID,
 		Action:     "task.delete",
-		EntityType: "user",
-		EntityID:   &userID,
-		Metadata:   fmt.Sprintf("task deleted success. TaskID %d", taskID),
+		EntityType: "task",
+		EntityID:   &deletedTaskID,
+		Metadata:   fmt.Sprintf("deleted task id %d", taskID),
 		IPAddress:  c.IP(),
 		UserAgent:  c.Get("User-Agent"),
 	})
