@@ -3,6 +3,7 @@ package handler
 import (
 	"net/url"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -82,6 +83,75 @@ func (h *UserHandler) GetAllUser(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, err.Error())
 	}
 	return c.JSON(users)
+}
+
+func (h *UserHandler) UpdateRole(c fiber.Ctx) error {
+	actorID := c.Locals("user_id").(uint)
+
+	targetID, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "invalid user id")
+	}
+
+	req := new(dto.UpdateUserRoleRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
+	}
+
+	if err := h.service.UpdateUserRole(actorID, uint(targetID), req.Role); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	targetUserID := uint(targetID)
+	_ = h.auditLogService.Create(dto.CreateAuditLogInput{
+		ActorID:    actorID,
+		Action:     "user.role_update",
+		EntityType: "user",
+		EntityID:   &targetUserID,
+		Metadata:   "updated user role to " + req.Role,
+		IPAddress:  c.IP(),
+		UserAgent:  c.Get("User-Agent"),
+	})
+
+	return response.Message(c, fiber.StatusOK, "user role updated")
+}
+
+func (h *UserHandler) UpdateActiveStatus(c fiber.Ctx) error {
+	actorID := c.Locals("user_id").(uint)
+
+	targetID, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "invalid user id")
+	}
+
+	req := new(dto.DeactivateUserRequest)
+	if err := c.Bind().Body(req); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
+	}
+
+	if err := h.service.DeactivateUser(actorID, uint(targetID), req.Active); err != nil {
+		return response.Error(c, fiber.StatusBadRequest, err.Error())
+	}
+
+	targetUserID := uint(targetID)
+	action := "user.activate"
+	metadata := "activated user account"
+	if !req.Active {
+		action = "user.deactivate"
+		metadata = "deactivated user account"
+	}
+
+	_ = h.auditLogService.Create(dto.CreateAuditLogInput{
+		ActorID:    actorID,
+		Action:     action,
+		EntityType: "user",
+		EntityID:   &targetUserID,
+		Metadata:   metadata,
+		IPAddress:  c.IP(),
+		UserAgent:  c.Get("User-Agent"),
+	})
+
+	return response.Message(c, fiber.StatusOK, "user status updated")
 }
 
 func (h *UserHandler) RefreshToken(c fiber.Ctx) error {

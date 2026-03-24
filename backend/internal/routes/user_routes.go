@@ -11,4 +11,6 @@ func registerUserRoutes(protected fiber.Router, userHandler *handler.UserHandler
 	users := protected.Group("/users")
 	users.Get("/", middleware.RequirePermission(permission.UserReadAll), userHandler.GetAllUser)
 	users.Get("/me", userHandler.Me)
+	users.Patch("/:id/role", middleware.RequirePermission(permission.UserRoleUpdate), userHandler.UpdateRole)
+	users.Patch("/:id/active", middleware.RequirePermission(permission.UserDeactivate), userHandler.UpdateActiveStatus)
 }

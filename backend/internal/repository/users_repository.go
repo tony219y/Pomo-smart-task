@@ -19,7 +19,7 @@ func (r *UserRepository) FindAll() ([]model.UserResponse, error) {
 	var user []model.UserResponse
 
 	if err := r.db.Model(&model.Users{}).
-		Select("id", "email", "username", "role").
+		Select("id", "email", "username", "role", "active").
 		Find(&user).Error; err != nil {
 		return nil, err
 	}
@@ -62,6 +62,33 @@ func (r *UserRepository) GetUserByID(userID uint) (*model.UserResponse, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *UserRepository) FindUserByID(userID uint) (*model.Users, error) {
+	var user model.Users
+	if err := r.db.Where("id = ?", userID).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) UpdateRole(userID uint, role string) error {
+	return r.db.Model(&model.Users{}).
+		Where("id = ?", userID).
+		Update("role", role).Error
+}
+
+func (r *UserRepository) UpdateActive(userID uint, active bool) error {
+	return r.db.Model(&model.Users{}).
+		Where("id = ?", userID).
+		Update("active", active).Error
+}
+
+func (r *UserRepository) RevokeAllRefreshTokens(userID uint) error {
+	now := time.Now()
+	return r.db.Model(&model.RefreshToken{}).
+		Where("user_id = ? AND revoked_at IS NULL", userID).
+		Update("revoked_at", now).Error
 }
 
 func (r *UserRepository) SaveRefreshToken(userID uint, jti string, expiresAt time.Time) error {

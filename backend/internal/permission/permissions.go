@@ -4,10 +4,16 @@ const (
 	TaskReadOwn    = "task.read_own"
 	TaskWriteOwn   = "task.write_own"
 	TagReadOwn     = "tag.read_own"
+	ActivityReadOwn  = "activity.read_own"
+	ActivityReadAll  = "activity.read_all"
 	ReportReadOwn  = "report.read_own"
 	ReportReadTeam = "report.read_team"
+	ReportReadAll  = "report.read_all"
 	UserReadOwn    = "user.read_own"
 	UserReadAll    = "user.read_all"
+	UserRoleUpdate = "user.role_update"
+	UserDeactivate = "user.deactivate"
+	SessionRevoke  = "session.revoke"
 	AuditRead      = "audit.read"
 )
 
@@ -16,6 +22,7 @@ var RolePermissions = map[string][]string{
 		TaskReadOwn,
 		TaskWriteOwn,
 		TagReadOwn,
+		ActivityReadOwn,
 		ReportReadOwn,
 		UserReadOwn,
 	},
@@ -23,6 +30,8 @@ var RolePermissions = map[string][]string{
 		TaskReadOwn,
 		TaskWriteOwn,
 		TagReadOwn,
+		ActivityReadOwn,
+		ActivityReadAll,
 		ReportReadOwn,
 		ReportReadTeam,
 		UserReadOwn,
@@ -32,10 +41,16 @@ var RolePermissions = map[string][]string{
 		TaskReadOwn,
 		TaskWriteOwn,
 		TagReadOwn,
+		ActivityReadOwn,
+		ActivityReadAll,
 		ReportReadOwn,
 		ReportReadTeam,
+		ReportReadAll,
 		UserReadOwn,
 		UserReadAll,
+		UserRoleUpdate,
+		UserDeactivate,
+		SessionRevoke,
 		AuditRead,
 	},
 }
