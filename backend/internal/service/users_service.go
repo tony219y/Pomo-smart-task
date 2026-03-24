@@ -19,15 +19,20 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) Login(email, password string) (string, string, string) {
+func (s *UserService) Login(email, password string) (*model.Users, string, string, string) {
 	user, err := s.repo.FindByEmail(email)
 	if err != nil {
-		return "", "", "Incorrect username or password"
+		return nil, "", "", "Incorrect username or password"
+	}
+	if !user.Active {
+		return nil, "", "", "This account has been deactivated"
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return "", "", "Incorrect username or password"
+		return nil, "", "", "Incorrect username or password"
 	}
-	return s.issueSession(user)
+	accessToken, refreshToken, _ := s.issueSession(user)
+
+	return user, accessToken, refreshToken, ""
 }
 
 func (s *UserService) issueSession(user *model.Users) (string, string, string) {
@@ -91,6 +96,10 @@ func (s *UserService) LoginWithGoogle(email string) (string, string, string) {
 		user = newUser
 	}
 
+	if !user.Active {
+		return "", "", "This account has been deactivated"
+	}
+
 	return s.issueSession(user)
 }
 
@@ -137,4 +146,42 @@ func (s *UserService) RevokeSession(token string) error {
 		return nil
 	}
 	return s.repo.RevokeRefreshToken(claims.JTI)
+}
+
+func (s *UserService) UpdateUserRole(actorID uint, targetUserID uint, role string) error {
+	if actorID == targetUserID {
+		return errors.New("you cannot change your own role")
+	}
+
+	if role != "member" && role != "staff" && role != "admin" {
+		return errors.New("invalid role")
+	}
+
+	_, err := s.repo.FindUserByID(targetUserID)
+	if err != nil {
+		return err
+	}
+
+	return s.repo.UpdateRole(targetUserID, role)
+}
+
+func (s *UserService) DeactivateUser(actorID uint, targetUserID uint, active bool) error {
+	if actorID == targetUserID {
+		return errors.New("you cannot change your own active status")
+	}
+
+	_, err := s.repo.FindUserByID(targetUserID)
+	if err != nil {
+		return err
+	}
+
+	if err := s.repo.UpdateActive(targetUserID, active); err != nil {
+		return err
+	}
+
+	if !active {
+		return s.repo.RevokeAllRefreshTokens(targetUserID)
+	}
+
+	return nil
 }

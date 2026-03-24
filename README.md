@@ -108,3 +108,76 @@ flowchart LR
   D --> E["PostgreSQL (Neon)"]
   B --> F["JWT Auth + Refresh Cookie"]
 ```
+
+## Roles And Permissions
+
+This project uses 3 roles:
+- `member`
+- `staff`
+- `admin`
+
+### Member
+- Manage their own tasks
+- View their own tags
+- View their own reports
+- View their own activity
+- Manage their own login session
+- Cannot view other users
+- Cannot access team or system reports
+- Cannot view audit logs
+
+### Staff
+- Everything a `member` can do
+- View all users in a basic user list
+- View team-level reports
+- View user activity for operational work
+- Can help monitor usage and productivity
+- Cannot change admin roles
+- Cannot revoke any session
+- Cannot view full system audit logs
+
+### Admin
+- Everything a `staff` can do
+- View full audit logs
+- View system-wide reports
+- Update user roles
+- Revoke user sessions
+- View all users and manage account access
+- Deactivate user accounts
+- Monitor security-related activity
+
+### Notes
+- `admin` should not be treated as "can do everything"
+- audit logs should be readable by admin, but not editable or deletable from the app
+- role checks are mapped to permissions in backend, so routes do not need to hardcode role names everywhere
+
+### Current Permission Set
+- `task.read_own`
+- `task.write_own`
+- `tag.read_own`
+- `activity.read_own`
+- `activity.read_all`
+- `report.read_own`
+- `report.read_team`
+- `report.read_all`
+- `user.read_own`
+- `user.read_all`
+- `user.role_update`
+- `session.revoke`
+- `audit.read`
+
+## Role Matrix
+
+| Feature | Member | Staff | Admin |
+|---|---|---|---|
+| Manage own tasks | Yes | Yes | Yes |
+| View own reports | Yes | Yes | Yes |
+| View team reports | No | Yes | Yes |
+| View system reports | No | No | Yes |
+| View own activity | Yes | Yes | Yes |
+| View all user activity | No | Yes | Yes |
+| View all users | No | Yes | Yes |
+| Update user role | No | No | Yes |
+| Revoke user session | No | No | Yes |
+| View audit logs | No | No | Yes |
+| Deactivate user accounts | No | No | Yes |

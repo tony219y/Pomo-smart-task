@@ -11,5 +11,6 @@ func Migration(db *gorm.DB) {
 		&model.Task{},
 		&model.Tags{},
 		&model.RefreshToken{},
+		&model.AuditLog{},
 	)
 }
