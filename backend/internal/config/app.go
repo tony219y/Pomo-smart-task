@@ -20,9 +20,10 @@ func Load() AppConfig {
 		port = "8080"
 	}
 
+	frontendURL := os.Getenv("FRONTEND")
 	origins := splitCSV(os.Getenv("CORS_ALLOWED_ORIGINS"))
 	if len(origins) == 0 {
-		origins = []string{"http://localhost:3000"}
+		origins = []string{"http://localhost:3000", frontendURL}
 	}
 
 	return AppConfig{
