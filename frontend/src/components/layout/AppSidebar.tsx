@@ -61,6 +61,16 @@ const AppSidebar = () => {
     ...(profile?.role === "admin"
       ? [
           {
+            name: "Admin Reports",
+            url: "/admin/reports",
+            icon: BarChart3,
+          },
+          {
+            name: "Admin Logs",
+            url: "/admin/logs",
+            icon: Shield,
+          },
+          {
             name: "Admin Users",
             url: "/admin/users",
             icon: Shield,

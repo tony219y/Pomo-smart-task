@@ -28,6 +28,20 @@ func (r *TaskRepository) FindAll(userID uint) ([]model.Task, error) {
 	return tasks, nil
 }
 
+func (r *TaskRepository) FindAllForAdmin() ([]model.Task, error) {
+	var tasks []model.Task
+
+	err := r.db.
+		Preload("Tags").
+		Order("created_at DESC").
+		Find(&tasks).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
 func (r *TaskRepository) FindByID(userID uint, taskID uint) (*model.Task, error) {
 	var task model.Task
 
