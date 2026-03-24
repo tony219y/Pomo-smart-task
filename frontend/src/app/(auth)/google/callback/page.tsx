@@ -1,31 +1,18 @@
-"use client";
+import GoogleCallbackClient from "@/features/auth/components/GoogleCallbackClient";
+import { Suspense } from "react";
 
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useAuthStore } from "@/store/auth-store";
-
-const GoogleCallbackPage = () => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const setAccessToken = useAuthStore((state) => state.setAccessToken);
-
-  useEffect(() => {
-    const accessToken = searchParams.get("accessToken");
-
-    if (!accessToken) {
-      router.replace("/login");
-      return;
-    }
-
-    setAccessToken(accessToken);
-    router.replace("/dashboard");
-  }, [router, searchParams, setAccessToken]);
-
+export default function Page() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
-      <p className="text-sm text-muted-foreground">Signing you in with Google...</p>
-    </div>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+          <p className="text-sm text-muted-foreground">
+            Signing you in with Google...
+          </p>
+        </div>
+      }
+    >
+      <GoogleCallbackClient />
+    </Suspense>
   );
-};
-
-export default GoogleCallbackPage;
+}
