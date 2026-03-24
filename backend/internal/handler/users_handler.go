@@ -19,6 +19,25 @@ type UserHandler struct {
 	auditLogService *service.AuditLogService
 }
 
+func buildRefreshTokenCookie(value string, expires time.Time) *fiber.Cookie {
+	isProduction := os.Getenv("APP_ENV") == "production"
+	sameSite := "Lax"
+
+	if isProduction {
+		sameSite = "None"
+	}
+
+	return &fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    value,
+		Expires:  expires,
+		HTTPOnly: true,
+		SameSite: sameSite,
+		Secure:   isProduction,
+		Path:     "/",
+	}
+}
+
 func NewUserHandler(service *service.UserService, auditLogService *service.AuditLogService) *UserHandler {
 	return &UserHandler{
 		service:         service,
@@ -51,16 +70,7 @@ func (h *UserHandler) UserLogin(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, errMsg)
 	}
 
-	secureCookie := os.Getenv("APP_ENV") == "production"
-	c.Cookie(&fiber.Cookie{
-		Name:     "refresh_token",
-		Value:    refreshToken,
-		Expires:  time.Now().Add(30 * 24 * time.Hour),
-		HTTPOnly: true,
-		SameSite: "Lax",
-		Secure:   secureCookie,
-		Path:     "/",
-	})
+	c.Cookie(buildRefreshTokenCookie(refreshToken, time.Now().Add(30*24*time.Hour)))
 
 	_ = h.auditLogService.Create(dto.CreateAuditLogInput{
 		ActorID:    user.ID,
@@ -165,16 +175,7 @@ func (h *UserHandler) RefreshToken(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusUnauthorized, "invalid refresh token")
 	}
 
-	secureCookie := os.Getenv("APP_ENV") == "production"
-	c.Cookie(&fiber.Cookie{
-		Name:     "refresh_token",
-		Value:    newRefreshToken,
-		Expires:  time.Now().Add(30 * 24 * time.Hour),
-		HTTPOnly: true,
-		SameSite: "Lax",
-		Secure:   secureCookie,
-		Path:     "/",
-	})
+	c.Cookie(buildRefreshTokenCookie(newRefreshToken, time.Now().Add(30*24*time.Hour)))
 
 	return c.Status(fiber.StatusOK).JSON(dto.RefreshResponse{
 		AccessToken: accessToken,
@@ -196,16 +197,7 @@ func (h *UserHandler) Logout(c fiber.Ctx) error {
 		_ = h.service.RevokeSession(refreshToken)
 	}
 
-	secureCookie := os.Getenv("APP_ENV") == "production"
-	c.Cookie(&fiber.Cookie{
-		Name:     "refresh_token",
-		Value:    "",
-		Expires:  time.Now().Add(-time.Hour),
-		HTTPOnly: true,
-		SameSite: "Lax",
-		Secure:   secureCookie,
-		Path:     "/",
-	})
+	c.Cookie(buildRefreshTokenCookie("", time.Now().Add(-time.Hour)))
 
 	_ = h.auditLogService.Create(dto.CreateAuditLogInput{
 		ActorID:    userID,
@@ -243,16 +235,7 @@ func (h *UserHandler) Callback(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, errMsg)
 	}
 
-	secureCookie := os.Getenv("APP_ENV") == "production"
-	c.Cookie(&fiber.Cookie{
-		Name:     "refresh_token",
-		Value:    refreshToken,
-		Expires:  time.Now().Add(30 * 24 * time.Hour),
-		HTTPOnly: true,
-		SameSite: "Lax",
-		Secure:   secureCookie,
-		Path:     "/",
-	})
+	c.Cookie(buildRefreshTokenCookie(refreshToken, time.Now().Add(30*24*time.Hour)))
 
 	frontendURL := os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
