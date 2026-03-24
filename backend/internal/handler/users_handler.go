@@ -63,16 +63,6 @@ func (h *UserHandler) UserLogin(c fiber.Ctx) error {
 }
 
 func (h *UserHandler) GetAllUser(c fiber.Ctx) error {
-	roleRaw := c.Locals("role")
-	if roleRaw == nil {
-		return response.Error(c, fiber.StatusUnauthorized, "login required")
-	}
-
-	role, ok := roleRaw.(string)
-	if !ok || role != "admin" {
-		return response.Error(c, fiber.StatusForbidden, "access denied")
-	}
-
 	users, err := h.service.GetAllUser()
 	if err != nil {
 		return response.Error(c, fiber.StatusBadRequest, err.Error())
