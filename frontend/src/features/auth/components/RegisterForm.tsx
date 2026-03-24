@@ -4,15 +4,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import { useForm } from 'react-hook-form'
-import { RegisterInput, registerSchema } from '../schemas/register.schema'
 import Link from "next/link";
-import { useRegister } from "../hooks/use-register";
+import { RegisterInput, registerSchema } from "../schemas/auth.schema";
+import { useAuth } from "../hooks/use-auth";
 
 
 const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { register, handleSubmit, formState: { errors }, reset, } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema), });
-  const { CreateUser } = useRegister();
+  const { CreateUser } = useAuth();
 
   const onSubmit = async (data: RegisterInput) => {
     if (isLoading) return;
