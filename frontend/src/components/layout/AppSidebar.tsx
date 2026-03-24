@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +18,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Shield,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -27,12 +27,15 @@ import { useState } from "react";
 import { logOut } from "@/features/auth/services/auth.service";
 import { useAuthStore } from "@/store/auth-store";
 import { toast } from "sonner";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 
 const AppSidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const clearAuth = useAuthStore((state) => state.logout);
+  const { useProfile } = useAuth();
+  const { data: profile } = useProfile();
 
   const projects = [
     {
@@ -55,6 +58,25 @@ const AppSidebar = () => {
       url: "/reports",
       icon: BarChart3,
     },
+    ...(profile?.role === "admin"
+      ? [
+          {
+            name: "Admin Reports",
+            url: "/admin/reports",
+            icon: BarChart3,
+          },
+          {
+            name: "Admin Logs",
+            url: "/admin/logs",
+            icon: Shield,
+          },
+          {
+            name: "Admin Users",
+            url: "/admin/users",
+            icon: Shield,
+          },
+        ]
+      : []),
   ];
   const { toggleSidebar, open } = useSidebar();
 

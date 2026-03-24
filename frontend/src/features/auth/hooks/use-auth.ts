@@ -35,9 +35,10 @@ export const useAuth = () => {
     router.push("/login");
   };
 
-  const useProfile = () => {
+  const useProfile = (enabled = true) => {
     return useQuery({
       queryKey: ["user-profile"],
+      enabled,
       queryFn: async () => {
         const response = await GetProfile();
         if (!response) {

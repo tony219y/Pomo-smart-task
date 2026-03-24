@@ -11,6 +11,7 @@ type Handlers struct {
 	Tag    *handler.TagHandler
 	Task   *handler.TaskHandler
 	Report *handler.ReportHandler
+	Admin  *handler.AdminHandler
 }
 
 func Register(app *fiber.App, handlers Handlers) {
@@ -23,4 +24,5 @@ func Register(app *fiber.App, handlers Handlers) {
 	registerTagRoutes(protected, handlers.Tag)
 	registerTaskRoutes(protected, handlers.Task)
 	registerReportRoutes(protected, handlers.Report)
+	registerAdminRoutes(protected, handlers.Admin)
 }
