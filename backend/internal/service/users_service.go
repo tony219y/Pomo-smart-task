@@ -19,15 +19,17 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) Login(email, password string) (string, string, string) {
+func (s *UserService) Login(email, password string) (*model.Users, string, string, string) {
 	user, err := s.repo.FindByEmail(email)
 	if err != nil {
-		return "", "", "Incorrect username or password"
+		return nil, "", "", "Incorrect username or password"
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return "", "", "Incorrect username or password"
+		return nil, "", "", "Incorrect username or password"
 	}
-	return s.issueSession(user)
+	accessToken, refreshToken, _ := s.issueSession(user)
+
+	return user, accessToken, refreshToken, ""
 }
 
 func (s *UserService) issueSession(user *model.Users) (string, string, string) {

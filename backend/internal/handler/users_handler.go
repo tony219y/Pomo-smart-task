@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/tony219y/pomo-smart-task-api/auth"
+	"github.com/tony219y/pomo-smart-task-api/internal/auth"
 	"github.com/tony219y/pomo-smart-task-api/internal/dto"
 	"github.com/tony219y/pomo-smart-task-api/internal/response"
 	"github.com/tony219y/pomo-smart-task-api/internal/service"
@@ -14,11 +14,15 @@ import (
 )
 
 type UserHandler struct {
-	service *service.UserService
+	service         *service.UserService
+	auditLogService *service.AuditLogService
 }
 
-func NewUserHandler(service *service.UserService) *UserHandler {
-	return &UserHandler{service: service}
+func NewUserHandler(service *service.UserService, auditLogService *service.AuditLogService) *UserHandler {
+	return &UserHandler{
+		service:         service,
+		auditLogService: auditLogService,
+	}
 }
 
 func (h *UserHandler) CreateUser(c fiber.Ctx) error {
@@ -41,7 +45,7 @@ func (h *UserHandler) UserLogin(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, "invalid request body")
 	}
 
-	accessToken, refreshToken, errMsg := h.service.Login(req.Email, req.Password)
+	user, accessToken, refreshToken, errMsg := h.service.Login(req.Email, req.Password)
 	if errMsg != "" {
 		return response.Error(c, fiber.StatusBadRequest, errMsg)
 	}
@@ -55,6 +59,16 @@ func (h *UserHandler) UserLogin(c fiber.Ctx) error {
 		SameSite: "Lax",
 		Secure:   secureCookie,
 		Path:     "/",
+	})
+
+	_ = h.auditLogService.Create(dto.CreateAuditLogInput{
+		ActorID:    user.ID,
+		Action:     "auth.login",
+		EntityType: "user",
+		EntityID:   &user.ID,
+		Metadata:   "user login success",
+		IPAddress:  c.IP(),
+		UserAgent:  c.Get("User-Agent"),
 	})
 
 	return c.Status(fiber.StatusOK).JSON(dto.LoginResponse{
@@ -106,6 +120,7 @@ func (h *UserHandler) Me(c fiber.Ctx) error {
 	return c.JSON(user)
 }
 func (h *UserHandler) Logout(c fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
 	refreshToken := c.Cookies("refresh_token")
 	if refreshToken != "" {
 		_ = h.service.RevokeSession(refreshToken)
@@ -120,6 +135,16 @@ func (h *UserHandler) Logout(c fiber.Ctx) error {
 		SameSite: "Lax",
 		Secure:   secureCookie,
 		Path:     "/",
+	})
+
+	_ = h.auditLogService.Create(dto.CreateAuditLogInput{
+		ActorID:    userID,
+		Action:     "auth.logout",
+		EntityType: "user",
+		EntityID:   &userID,
+		Metadata:   "user logout success",
+		IPAddress:  c.IP(),
+		UserAgent:  c.Get("User-Agent"),
 	})
 	return response.Message(c, 200, "Logged out")
 }

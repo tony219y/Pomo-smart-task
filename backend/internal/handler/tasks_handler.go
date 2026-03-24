@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -12,11 +13,15 @@ import (
 )
 
 type TaskHandler struct {
-	service *service.TaskService
+	service         *service.TaskService
+	auditLogService *service.AuditLogService
 }
 
-func NewTaskHandler(service *service.TaskService) *TaskHandler {
-	return &TaskHandler{service: service}
+func NewTaskHandler(service *service.TaskService, auditLogService *service.AuditLogService) *TaskHandler {
+	return &TaskHandler{
+		service:         service,
+		auditLogService: auditLogService,
+	}
 }
 
 func (h *TaskHandler) Create(c fiber.Ctx) error {
@@ -44,10 +49,20 @@ func (h *TaskHandler) Create(c fiber.Ctx) error {
 		EstimatedTime: req.EstimatedTime,
 	}
 
-	_, err = h.service.CreateTask(task, userID, req.TagIDs)
+	taskCreated, err := h.service.CreateTask(task, userID, req.TagIDs)
 	if err != nil {
 		return response.Error(c, fiber.StatusBadRequest, "create task failed")
 	}
+
+	_ = h.auditLogService.Create(dto.CreateAuditLogInput{
+		ActorID:    userID,
+		Action:     "task.create",
+		EntityType: "user",
+		EntityID:   &userID,
+		Metadata:   fmt.Sprintf("task created success. TaskID %d", taskCreated.ID),
+		IPAddress:  c.IP(),
+		UserAgent:  c.Get("User-Agent"),
+	})
 
 	return response.Message(c, fiber.StatusCreated, "create task successfully")
 }
@@ -115,6 +130,16 @@ func (h *TaskHandler) Update(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, "update task failed")
 	}
 
+	_ = h.auditLogService.Create(dto.CreateAuditLogInput{
+		ActorID:    userID,
+		Action:     "task.update",
+		EntityType: "user",
+		EntityID:   &userID,
+		Metadata:   fmt.Sprintf("user updated success. TaskID %d", taskID),
+		IPAddress:  c.IP(),
+		UserAgent:  c.Get("User-Agent"),
+	})
+
 	return c.Status(fiber.StatusOK).JSON(task)
 }
 
@@ -132,6 +157,16 @@ func (h *TaskHandler) Delete(c fiber.Ctx) error {
 	if err := h.service.DeleteTask(userID, uint(taskID)); err != nil {
 		return response.Error(c, fiber.StatusNotFound, "task not found")
 	}
+
+	_ = h.auditLogService.Create(dto.CreateAuditLogInput{
+		ActorID:    userID,
+		Action:     "task.delete",
+		EntityType: "user",
+		EntityID:   &userID,
+		Metadata:   fmt.Sprintf("task deleted success. TaskID %d", taskID),
+		IPAddress:  c.IP(),
+		UserAgent:  c.Get("User-Agent"),
+	})
 
 	return response.Message(c, fiber.StatusOK, "delete task successfully")
 }

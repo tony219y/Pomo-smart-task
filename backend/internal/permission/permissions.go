@@ -12,7 +12,7 @@ const (
 )
 
 var RolePermissions = map[string][]string{
-	"user": {
+	"member": {
 		TaskReadOwn,
 		TaskWriteOwn,
 		TagReadOwn,

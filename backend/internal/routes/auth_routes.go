@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/limiter"
 	"github.com/tony219y/pomo-smart-task-api/internal/handler"
+	"github.com/tony219y/pomo-smart-task-api/internal/middleware"
 )
 
 func registerAuthRoutes(v1 fiber.Router, userHandler *handler.UserHandler) {
@@ -24,7 +25,7 @@ func registerAuthRoutes(v1 fiber.Router, userHandler *handler.UserHandler) {
 			})
 		},
 	}), userHandler.RefreshToken)
-	auth.Post("/logout", userHandler.Logout)
+	auth.Post("/logout", middleware.JWTMiddleware, userHandler.Logout)
 
 	auth.Get("/google", userHandler.GoogleAuth)
 	auth.Get("/google/callback", userHandler.Callback)
