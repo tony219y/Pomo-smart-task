@@ -11,19 +11,31 @@ import {
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
 import {
+  BarChart3,
   Bolt,
-  ChartColumnIncreasing,
   ClipboardList,
   Clock,
   LayoutDashboard,
+  LogOut,
   Menu,
-  Settings,
+  Shield,
   X,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { logOut } from "@/features/auth/services/auth.service";
+import { useAuthStore } from "@/store/auth-store";
+import { toast } from "sonner";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 
 const AppSidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const clearAuth = useAuthStore((state) => state.logout);
+  const { useProfile } = useAuth();
+  const { data: profile } = useProfile();
 
   const projects = [
     {
@@ -41,20 +53,53 @@ const AppSidebar = () => {
       url: "/pomodoro",
       icon: Clock,
     },
-    // {
-    //   name: "Analytics",
-    //   url: "/analytics",
-    //   icon: ChartColumnIncreasing,
-    // },
-    // {
-    //   name: "Settings",
-    //   url: "/settings",
-    //   icon: Settings,
-    // },
+    {
+      name: "Reports",
+      url: "/reports",
+      icon: BarChart3,
+    },
+    ...(profile?.role === "admin"
+      ? [
+          {
+            name: "Admin Reports",
+            url: "/admin/reports",
+            icon: BarChart3,
+          },
+          {
+            name: "Admin Logs",
+            url: "/admin/logs",
+            icon: Shield,
+          },
+          {
+            name: "Admin Users",
+            url: "/admin/users",
+            icon: Shield,
+          },
+        ]
+      : []),
   ];
   const { toggleSidebar, open } = useSidebar();
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+    try {
+      await logOut();
+      clearAuth();
+      router.replace("/login");
+    } catch {
+      toast.error("Logout failed. Please try again.");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-sidebar-border bg-sidebar"
+    >
       <SidebarHeader className="min-h-18 flex justify-center border-b border-sidebar-border">
         <div
           className={`flex w-full ${open ? "justify-end" : "justify-center"}`}
@@ -71,9 +116,15 @@ const AppSidebar = () => {
             </div>
           </div>
           {open ? (
-            <X onClick={toggleSidebar} className="mt-1 cursor-pointer text-muted-foreground" />
+            <X
+              onClick={toggleSidebar}
+              className="mt-1 cursor-pointer text-muted-foreground"
+            />
           ) : (
-            <Menu onClick={toggleSidebar} className="mt-1 cursor-pointer text-muted-foreground" />
+            <Menu
+              onClick={toggleSidebar}
+              className="mt-1 cursor-pointer text-muted-foreground"
+            />
           )}
         </div>
       </SidebarHeader>
@@ -98,6 +149,22 @@ const AppSidebar = () => {
           })}
         </SidebarMenu>
       </SidebarContent>
+      <SidebarFooter className="flex flex-col gap-2 p-3">
+        <SidebarMenu className="flex items-center">
+          <SidebarMenuButton
+            type="button"
+            variant="outline"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="h-11 rounded-xl text-[15px] text-sidebar-foreground/80 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-primary"
+          >
+            <LogOut size={18} />
+            <span className="overflow-hidden">
+              {isLoggingOut ? "Signing out..." : "Log out"}
+            </span>
+          </SidebarMenuButton>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 };

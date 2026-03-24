@@ -2,11 +2,13 @@ package service
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/tony219y/pomo-smart-task-api/internal/middleware"
 	"github.com/tony219y/pomo-smart-task-api/internal/model"
 	"github.com/tony219y/pomo-smart-task-api/internal/repository"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type UserService struct {
@@ -17,14 +19,23 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) Login(email, password string) (string, string, string) {
+func (s *UserService) Login(email, password string) (*model.Users, string, string, string) {
 	user, err := s.repo.FindByEmail(email)
 	if err != nil {
-		return "", "", "Incorrect username or password"
+		return nil, "", "", "Incorrect username or password"
+	}
+	if !user.Active {
+		return nil, "", "", "This account has been deactivated"
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return "", "", "Incorrect username or password"
+		return nil, "", "", "Incorrect username or password"
 	}
+	accessToken, refreshToken, _ := s.issueSession(user)
+
+	return user, accessToken, refreshToken, ""
+}
+
+func (s *UserService) issueSession(user *model.Users) (string, string, string) {
 	accessToken, refreshToken, refreshJTI, refreshExpiresAt, err := middleware.GenerateTokens(user.ID, user.Role)
 	if err != nil {
 		return "", "", "Generated token failed!"
@@ -34,6 +45,7 @@ func (s *UserService) Login(email, password string) (string, string, string) {
 	}
 	return accessToken, refreshToken, ""
 }
+
 func (s *UserService) Register(email, username, password string) (*model.Users, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -51,6 +63,44 @@ func (s *UserService) Register(email, username, password string) (*model.Users, 
 	}
 
 	return newUser, nil
+}
+
+func (s *UserService) LoginWithGoogle(email string) (string, string, string) {
+	user, err := s.repo.FindByEmail(email)
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", "", "Google login failed"
+		}
+
+		generatedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(email), bcrypt.DefaultCost)
+		if hashErr != nil {
+			return "", "", "Google login failed"
+		}
+
+		username := strings.TrimSpace(strings.Split(email, "@")[0])
+		if username == "" {
+			username = "google-user"
+		}
+
+		newUser := &model.Users{
+			Email:    email,
+			Username: username,
+			Password: string(generatedPassword),
+			Role:     "member",
+		}
+
+		if createErr := s.repo.CreateUser(newUser); createErr != nil {
+			return "", "", "Google login failed"
+		}
+
+		user = newUser
+	}
+
+	if !user.Active {
+		return "", "", "This account has been deactivated"
+	}
+
+	return s.issueSession(user)
 }
 
 func (s *UserService) GetAllUser() ([]model.UserResponse, error) {
@@ -96,4 +146,42 @@ func (s *UserService) RevokeSession(token string) error {
 		return nil
 	}
 	return s.repo.RevokeRefreshToken(claims.JTI)
+}
+
+func (s *UserService) UpdateUserRole(actorID uint, targetUserID uint, role string) error {
+	if actorID == targetUserID {
+		return errors.New("you cannot change your own role")
+	}
+
+	if role != "member" && role != "staff" && role != "admin" {
+		return errors.New("invalid role")
+	}
+
+	_, err := s.repo.FindUserByID(targetUserID)
+	if err != nil {
+		return err
+	}
+
+	return s.repo.UpdateRole(targetUserID, role)
+}
+
+func (s *UserService) DeactivateUser(actorID uint, targetUserID uint, active bool) error {
+	if actorID == targetUserID {
+		return errors.New("you cannot change your own active status")
+	}
+
+	_, err := s.repo.FindUserByID(targetUserID)
+	if err != nil {
+		return err
+	}
+
+	if err := s.repo.UpdateActive(targetUserID, active); err != nil {
+		return err
+	}
+
+	if !active {
+		return s.repo.RevokeAllRefreshTokens(targetUserID)
+	}
+
+	return nil
 }

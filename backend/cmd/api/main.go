@@ -34,9 +34,12 @@ func main() {
 }
 
 func buildHandlers(database *gorm.DB) routes.Handlers {
+	auditRepo := repository.NewAuditRepository(database)
+	auditService := service.NewAuditService(auditRepo)
+
 	userRepo := repository.NewUserRepository(database)
 	userService := service.NewUserService(userRepo)
-	userHandler := handler.NewUserHandler(userService)
+	userHandler := handler.NewUserHandler(userService, auditService)
 
 	tagRepo := repository.NewTagRepository(database)
 	tagService := service.NewTagsService(tagRepo)
@@ -44,11 +47,19 @@ func buildHandlers(database *gorm.DB) routes.Handlers {
 
 	taskRepo := repository.NewTaskRepository(database)
 	taskService := service.NewTaskService(taskRepo)
-	taskHandler := handler.NewTaskHandler(taskService)
+	taskHandler := handler.NewTaskHandler(taskService, auditService)
+
+	reportService := service.NewReportService(taskRepo)
+	reportHandler := handler.NewReportHandler(reportService)
+
+	adminService := service.NewAdminService(userRepo, taskRepo, auditRepo)
+	adminHandler := handler.NewAdminHandler(adminService)
 
 	return routes.Handlers{
-		User: userHandler,
-		Tag:  tagHandler,
-		Task: taskHandler,
+		User:   userHandler,
+		Tag:    tagHandler,
+		Task:   taskHandler,
+		Report: reportHandler,
+		Admin:  adminHandler,
 	}
 }

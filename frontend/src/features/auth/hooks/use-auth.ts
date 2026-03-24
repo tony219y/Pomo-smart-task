@@ -1,5 +1,5 @@
 import { useAuthStore } from "@/store/auth-store";
-import { GetProfile, loginUser, registerUser } from "../services/auth.service";
+import { GetProfile, getGoogleLoginUrl, loginUser, registerUser } from "../services/auth.service";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -18,6 +18,11 @@ export const useAuth = () => {
     router.push("/dashboard");
   };
 
+  const GoogleLogin = async () => {
+    const loginUrl = getGoogleLoginUrl();
+    window.location.href = loginUrl;
+  };
+
   const CreateUser = async (data: {
     email: string;
     username: string;
@@ -30,9 +35,10 @@ export const useAuth = () => {
     router.push("/login");
   };
 
-  const useProfile = () => {
+  const useProfile = (enabled = true) => {
     return useQuery({
       queryKey: ["user-profile"],
+      enabled,
       queryFn: async () => {
         const response = await GetProfile();
         if (!response) {
@@ -46,5 +52,5 @@ export const useAuth = () => {
   );
   };
 
-  return { userLogin, CreateUser, useProfile };
+  return { userLogin, CreateUser, useProfile, GoogleLogin };
 };
