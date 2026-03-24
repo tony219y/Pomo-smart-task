@@ -1,5 +1,7 @@
 import api from "@/api/axios";
 
+const baseApiUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 export const registerUser = async (data: {
   email: string;
   username: string;
@@ -12,6 +14,14 @@ export const registerUser = async (data: {
 export const loginUser = async (data: { email: string; password: string }) => {
   const res = await api.post("/auth/login", data);
   return res.data;
+};
+
+export const getGoogleLoginUrl = () => {
+  if (!baseApiUrl) {
+    throw new Error("NEXT_PUBLIC_BACKEND_URL is not set");
+  }
+
+  return `${baseApiUrl}/auth/google`;
 };
 
 export const refreshToken = async () => {
