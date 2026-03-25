@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/url"
 	"os"
 	"strconv"
@@ -21,6 +22,8 @@ type UserHandler struct {
 
 func buildRefreshTokenCookie(value string, expires time.Time) *fiber.Cookie {
 	isProduction := os.Getenv("APP_ENV") == "production"
+
+	log.Println("Is production:", isProduction)
 	sameSite := "Lax"
 
 	if isProduction {

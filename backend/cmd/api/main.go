@@ -26,7 +26,7 @@ func main() {
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		AllowCredentials: true,
 	}))
-
+	log.Println("Allowed Origins: ", cfg.AllowedOrigins)
 	routes.Register(app, buildHandlers(database))
 
 	log.Printf("server listening on :%s", cfg.Port)
