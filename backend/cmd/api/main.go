@@ -19,7 +19,7 @@ func main() {
 	app := fiber.New()
 
 	database := db.ConnectNeon()
-	db.Migration(database)
+	// db.Migration(database)
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     cfg.AllowedOrigins,
