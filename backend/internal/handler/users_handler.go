@@ -240,7 +240,7 @@ func (h *UserHandler) Callback(c fiber.Ctx) error {
 
 	c.Cookie(buildRefreshTokenCookie(refreshToken, time.Now().Add(30*24*time.Hour)))
 
-	frontendURL := os.Getenv("FRONTEND_URL")
+	frontendURL := os.Getenv("FRONTEND")
 	if frontendURL == "" {
 		frontendURL = "http://localhost:3000"
 	}
