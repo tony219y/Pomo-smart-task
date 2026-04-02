@@ -49,7 +49,7 @@ func buildHandlers(database *gorm.DB) routes.Handlers {
 	taskService := service.NewTaskService(taskRepo)
 	taskHandler := handler.NewTaskHandler(taskService, auditService)
 
-	reportService := service.NewReportService(taskRepo)
+	reportService := service.NewReportService(taskRepo, userRepo)
 	reportHandler := handler.NewReportHandler(reportService)
 
 	adminService := service.NewAdminService(userRepo, taskRepo, auditRepo)

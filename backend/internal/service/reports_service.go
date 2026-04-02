@@ -9,10 +9,14 @@ import (
 
 type ReportService struct {
 	taskRepo *repository.TaskRepository
+	userRepo *repository.UserRepository
 }
 
-func NewReportService(taskRepo *repository.TaskRepository) *ReportService {
-	return &ReportService{taskRepo: taskRepo}
+func NewReportService(taskRepo *repository.TaskRepository, userRepo *repository.UserRepository) *ReportService {
+	return &ReportService{
+		taskRepo: taskRepo,
+		userRepo: userRepo,
+	}
 }
 
 func (s *ReportService) GetSummary(userID uint) (*dto.ReportSummaryResponse, error) {
@@ -85,6 +89,54 @@ func (s *ReportService) GetSummary(userID uint) (*dto.ReportSummaryResponse, err
 
 	if len(summary.TopTags) > 3 {
 		summary.TopTags = summary.TopTags[:3]
+	}
+
+	return summary, nil
+}
+
+func (s *ReportService) GetTeamSummary() (*dto.TeamReportSummaryResponse, error) {
+	users, err := s.userRepo.FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	tasks, err := s.taskRepo.FindAllForAdmin()
+	if err != nil {
+		return nil, err
+	}
+
+	summary := &dto.TeamReportSummaryResponse{
+		RoleBreakdown: map[string]int{
+			"member": 0,
+			"staff":  0,
+			"admin":  0,
+		},
+		RecentTasks: make([]dto.ReportTaskItem, 0),
+	}
+
+	for _, user := range users {
+		summary.TotalUsers++
+		if user.Active {
+			summary.ActiveUsers++
+		}
+		summary.RoleBreakdown[user.Role]++
+	}
+
+	for index, task := range tasks {
+		summary.TotalTasks++
+		summary.TotalEstimatedMinutes += task.EstimatedTime
+		if task.Status == "done" {
+			summary.CompletedTasks++
+		}
+
+		if index < 5 {
+			summary.RecentTasks = append(summary.RecentTasks, dto.ReportTaskItem{
+				ID:       task.ID,
+				Title:    task.Title,
+				Status:   task.Status,
+				Priority: task.Priority,
+			})
+		}
 	}
 
 	return summary, nil
