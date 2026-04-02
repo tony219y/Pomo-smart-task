@@ -24,3 +24,13 @@ type ReportSummaryResponse struct {
 	TopTags               []TagReportItem `json:"topTags"`
 	RecentTasks           []ReportTaskItem `json:"recentTasks"`
 }
+
+type TeamReportSummaryResponse struct {
+	TotalUsers            int              `json:"totalUsers"`
+	ActiveUsers           int              `json:"activeUsers"`
+	TotalTasks            int              `json:"totalTasks"`
+	CompletedTasks        int              `json:"completedTasks"`
+	TotalEstimatedMinutes int              `json:"totalEstimatedMinutes"`
+	RoleBreakdown         map[string]int   `json:"roleBreakdown"`
+	RecentTasks           []ReportTaskItem `json:"recentTasks"`
+}

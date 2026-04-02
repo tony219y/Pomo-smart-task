@@ -27,3 +27,12 @@ func (h *ReportHandler) GetSummary(c fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(summary)
 }
+
+func (h *ReportHandler) GetTeamSummary(c fiber.Ctx) error {
+	summary, err := h.service.GetTeamSummary()
+	if err != nil {
+		return response.Error(c, fiber.StatusInternalServerError, "get team report summary failed")
+	}
+
+	return c.Status(fiber.StatusOK).JSON(summary)
+}
