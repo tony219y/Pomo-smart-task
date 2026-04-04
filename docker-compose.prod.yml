@@ -15,6 +15,7 @@ services:
       context: ./frontend
       args:
         NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL}
+        NEXT_PUBLIC_ALLOW_INSECURE_BACKEND: ${NEXT_PUBLIC_ALLOW_INSECURE_BACKEND:-false}
     restart: unless-stopped
     depends_on:
       - backend

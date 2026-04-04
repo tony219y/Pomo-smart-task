@@ -2,6 +2,8 @@ import { useAuthStore } from "@/store/auth-store";
 import axios, { type InternalAxiosRequestConfig } from "axios";
 
 const base_api = process.env.NEXT_PUBLIC_BACKEND_URL;
+const allowInsecureBackend =
+  process.env.NEXT_PUBLIC_ALLOW_INSECURE_BACKEND === "true";
 
 function isAllowedBackendURL(url?: string) {
   if (!url) {
@@ -10,13 +12,16 @@ function isAllowedBackendURL(url?: string) {
 
   return (
     url.startsWith("https://") ||
+    (allowInsecureBackend && url.startsWith("http://")) ||
     url.startsWith("http://localhost") ||
     url.startsWith("http://127.0.0.1")
   );
 }
 
 if (!isAllowedBackendURL(base_api)) {
-  throw new Error("NEXT_PUBLIC_BACKEND_URL must use https:// outside localhost");
+  throw new Error(
+    "NEXT_PUBLIC_BACKEND_URL must use https:// outside localhost unless NEXT_PUBLIC_ALLOW_INSECURE_BACKEND=true",
+  );
 }
 
 type RetriableRequest = InternalAxiosRequestConfig & {
