@@ -5,6 +5,7 @@ import { useTasks } from "@/features/dashboard/hooks/useTask";
 import { useTags } from "@/features/dashboard/hooks/useTags";
 import TaskCard from "@/features/tasks/components/TaskCard";
 import TaskFilterBar from "@/features/tasks/components/TaskFilterBar";
+import { AuthGuard } from "@/features/auth/components/auth-guard";
 
 const page = () => {
   const { tasks } = useTasks();
@@ -38,6 +39,7 @@ const page = () => {
   };
 
   return (
+    <AuthGuard allowedRoles={["member"]}>
     <div className="w-full space-y-10 p-10">
       <div className="flex items-center justify-between border border-border rounded-xl bg-card p-4">
         <h1 className="text-4xl">All Tasks</h1>
@@ -59,6 +61,7 @@ const page = () => {
         <TaskCard tasks={filteredTasks} />
       </div>
     </div>
+    </AuthGuard>
   );
 };
 

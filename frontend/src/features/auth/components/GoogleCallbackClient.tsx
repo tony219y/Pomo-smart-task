@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
+import { getRoleFromAccessToken, getRoleHomePath } from "../utils/role-navigation";
 
 const GoogleCallbackClient = () => {
   const router = useRouter();
@@ -18,7 +19,7 @@ const GoogleCallbackClient = () => {
     }
 
     setAccessToken(accessToken);
-    router.replace("/dashboard");
+    router.replace(getRoleHomePath(getRoleFromAccessToken(accessToken)));
   }, [router, searchParams, setAccessToken]);
 
   return (
