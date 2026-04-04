@@ -7,7 +7,7 @@
 
 ## สรุปผลปัจจุบัน
 
-### 1. Mandatory Requirementsบริษัท พีค ซิเคียวร์ จำกัด vs ascend money 
+### 1. Mandatory Requirements
 
 | Requirement | Status | Notes |
 | --- | --- | --- |
