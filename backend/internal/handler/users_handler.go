@@ -242,7 +242,7 @@ func (h *UserHandler) Callback(c fiber.Ctx) error {
 
 	frontendURL := os.Getenv("FRONTEND")
 	if frontendURL == "" {
-		frontendURL = "http://localhost:3000"
+		frontendURL = "https://localhost:3000"
 	}
 
 	redirectURL := frontendURL + "/google/callback?accessToken=" + url.QueryEscape(accessToken)
