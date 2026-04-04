@@ -1,128 +1,132 @@
-# Deploy Pomo Smart Task on Nipa Cloud
+# Deploy on Nipa Cloud
 
-This project is ready to deploy on a Nipa Cloud VM with Docker and Docker Compose.
+This guide shows a simple way to run this project on a Nipa Cloud VM with Docker.
 
-## Recommended Architecture
+## 0. Set up the VM
 
-- 1 Linux VM on Nipa Cloud
-- Docker Engine + Docker Compose plugin
-- PostgreSQL managed outside the VM, or on another VM
-- Nginx reverse proxy with HTTPS
-- 2 subdomains:
-  - `app.your-domain.com` for Next.js frontend
-  - `api.your-domain.com` for Go backend
+Create a VM with Ubuntu, then connect with SSH.
 
-## Files Added for Production
-
-- `docker-compose.prod.yml`
-- `.env.production.example`
-- `backend/.env.production.example`
-
-## 1. Prepare the Server
-
-Use Ubuntu 22.04 or 24.04 on Nipa Cloud.
-
-Install Docker:
+Install basic tools:
 
 ```bash
 sudo apt update
-sudo apt install -y ca-certificates curl gnupg
+sudo apt install -y git ca-certificates curl gnupg
+```
+
+Install Docker and Docker Compose:
+
+```bash
 sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo $VERSION_CODENAME) stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 sudo apt update
 sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-sudo usermod -aG docker $USER
 ```
 
-Reconnect SSH after running `usermod`.
+Check that Docker is ready:
 
-## 2. Upload Project to the VM
+```bash
+docker --version
+docker compose version
+```
 
-Example:
+## What you need
+
+- 1 Ubuntu VM
+- Docker and Docker Compose
+- Git
+- A PostgreSQL database
+
+## 1. Clone the project
 
 ```bash
 git clone <your-repository-url>
 cd Pomo-smart-task
 ```
 
-## 3. Create Production Environment Files
+## 2. Create environment files
 
-Create root environment file for the frontend build:
+Create the frontend environment file:
 
 ```bash
 cp .env.production.example .env.production
 ```
 
-Set:
+Edit `.env.production`
 
 ```env
-NEXT_PUBLIC_BACKEND_URL=https://api.your-domain.com/api/v1
-NEXT_PUBLIC_ALLOW_INSECURE_BACKEND=false
-```
-
-If you deploy temporarily without HTTPS and use a server IP instead of a domain, you can use:
-
-```env
-NEXT_PUBLIC_BACKEND_URL=http://<server-ip>:8080/api/v1
+NEXT_PUBLIC_BACKEND_URL=http://<your-server-ip>:8080/api/v1
 NEXT_PUBLIC_ALLOW_INSECURE_BACKEND=true
 ```
 
-Create backend production environment file:
+Create the backend environment file:
 
 ```bash
 cp backend/.env.production.example backend/.env.production
 ```
 
-Set:
+Edit `backend/.env.production`
 
 ```env
 DATABASE_URL=postgresql://<user>:<password>@<host>/<db>?sslmode=require
 PORT=8080
-JWT_SECRET=<random-secret-at-least-32-characters>
-GOOGLE_CLIENT_ID=<google-client-id>
-GOOGLE_CLIENT_SECRET=<google-client-secret>
-GOOGLE_REDIRECT_URL=https://api.your-domain.com/api/v1/auth/google/callback
-FRONTEND=https://app.your-domain.com
-APP_ENV=production
-CORS_ALLOWED_ORIGINS=https://app.your-domain.com
+JWT_SECRET=your-secret-key-with-at-least-32-characters
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URL=http://<your-server-ip>:8080/api/v1/auth/google/callback
+FRONTEND=http://<your-server-ip>:3000
+APP_ENV=local
+CORS_ALLOWED_ORIGINS=http://<your-server-ip>:3000
 ```
 
-## 4. Start the Application
+## 3. Start the project
 
 ```bash
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
 ```
 
-Check status:
+## 4. Check that it is running
 
 ```bash
 docker compose --env-file .env.production -f docker-compose.prod.yml ps
+```
+
+View logs:
+
+```bash
 docker compose --env-file .env.production -f docker-compose.prod.yml logs -f
 ```
 
-At this stage:
+## 5. Open the app
 
-- frontend listens on port `3000`
-- backend listens on port `8080`
+- Frontend: `http://<your-server-ip>:3000`
+- Backend: `http://<your-server-ip>:8080`
 
-## 5. Put Nginx in Front of the Containers
+## Notes
+
+- This setup is for practice or testing.
+- It uses server IP and HTTP first, so it is easy to start.
+- For real production use, add Nginx, a domain, and HTTPS later.
+- Do not commit `.env.production` or `backend/.env.production`
+
+## Optional: Set up Nginx
+
+You can add Nginx later if you want to use a domain name.
 
 Install Nginx:
 
 ```bash
+sudo apt update
 sudo apt install -y nginx
 ```
 
-Frontend config:
+Example frontend config:
 
 ```nginx
 server {
-    server_name app.your-domain.com;
+    listen 80;
+    server_name your-domain.com;
 
     location / {
         proxy_pass http://127.0.0.1:3000;
@@ -130,15 +134,15 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
     }
 }
 ```
 
-Backend config:
+Example backend config:
 
 ```nginx
 server {
+    listen 80;
     server_name api.your-domain.com;
 
     location / {
@@ -147,71 +151,15 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
     }
 }
 ```
 
-Important:
-
-- `X-Forwarded-Proto https` is required because the backend rejects non-HTTPS traffic when `APP_ENV=production`
-- frontend and backend should both be accessed through HTTPS domains, not raw public IPs
-
-## 6. Enable HTTPS
-
-If your Nipa Cloud VM is public-facing, point DNS first:
-
-- `app.your-domain.com` -> VM public IP
-- `api.your-domain.com` -> VM public IP
-
-Then install certificates with Let's Encrypt:
+After that, reload Nginx:
 
 ```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d app.your-domain.com -d api.your-domain.com
+sudo nginx -t
+sudo systemctl reload nginx
 ```
 
-## 7. Google OAuth Configuration
-
-In Google Cloud Console, update:
-
-- Authorized JavaScript origins:
-  - `https://app.your-domain.com`
-  - `https://api.your-domain.com`
-- Authorized redirect URI:
-  - `https://api.your-domain.com/api/v1/auth/google/callback`
-
-## 8. Security Notes
-
-- Do not commit `.env.production` or `backend/.env.production`
-- Use a new `JWT_SECRET` with at least 32 characters
-- Rotate any secret that was previously committed to the repository
-- Restrict VM firewall to ports `80` and `443`
-- Do not expose `3000` and `8080` directly to the internet once Nginx is working
-
-## 9. Useful Commands
-
-Restart:
-
-```bash
-docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
-```
-
-Stop:
-
-```bash
-docker compose --env-file .env.production -f docker-compose.prod.yml down
-```
-
-Logs:
-
-```bash
-docker compose --env-file .env.production -f docker-compose.prod.yml logs -f backend
-docker compose --env-file .env.production -f docker-compose.prod.yml logs -f frontend
-```
-
-## Notes for This Project
-
-- Frontend needs `NEXT_PUBLIC_BACKEND_URL` at build time, so it is passed as a Docker build arg in `docker-compose.prod.yml`
-- Backend production mode requires HTTPS URLs for `FRONTEND` and `GOOGLE_REDIRECT_URL`
-- The backend trusts `X-Forwarded-Proto`, so Nginx must pass that header correctly
+If you want HTTPS, add a domain first and install SSL later.

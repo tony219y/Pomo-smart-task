@@ -190,3 +190,7 @@ npm run dev
 ```
 
 Open `http://localhost:3000`
+
+## Deploy
+
+For a simple practice deployment on Nipa Cloud, see [docs/nipa-cloud-deploy.md](/D:/Personal-Project/Pomo-smart-task/docs/nipa-cloud-deploy.md).
