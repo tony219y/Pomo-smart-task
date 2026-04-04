@@ -4,6 +4,7 @@ import { BarChart3, CheckCircle2, Clock3, Flame, ListTodo, Tags } from "lucide-r
 import SummaryCard from "@/features/dashboard/components/SummaryCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useReportSummary } from "@/features/reports/hooks/useReportSummary";
+import { AuthGuard } from "@/features/auth/components/auth-guard";
 
 const statusLabels: Record<string, string> = {
   todo: "Todo",
@@ -44,6 +45,7 @@ const ReportsPage = () => {
   const remainingMinutes = summary.totalEstimatedMinutes % 60;
 
   return (
+    <AuthGuard allowedRoles={["member"]}>
     <div className="space-y-6">
       <section className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Reports</h1>
@@ -164,6 +166,7 @@ const ReportsPage = () => {
         </Card>
       </section>
     </div>
+    </AuthGuard>
   );
 };
 

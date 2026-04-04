@@ -37,7 +37,7 @@ const AppSidebar = () => {
   const { useProfile } = useAuth();
   const { data: profile } = useProfile();
 
-  const projects = [
+  const memberProjects = [
     {
       name: "Dashboard",
       url: "/dashboard",
@@ -54,39 +54,54 @@ const AppSidebar = () => {
       icon: Clock,
     },
     {
-      name: "Reports",
+      name: "My Reports",
       url: "/reports",
       icon: BarChart3,
     },
-    ...((profile?.role === "staff" || profile?.role === "admin")
-      ? [
-          {
-            name: "Staff Reports",
-            url: "/staff/reports",
-            icon: BarChart3,
-          },
-        ]
-      : []),
-    ...(profile?.role === "admin"
-      ? [
-          {
-            name: "Admin Reports",
-            url: "/admin/reports",
-            icon: BarChart3,
-          },
-          {
-            name: "Admin Logs",
-            url: "/admin/logs",
-            icon: Shield,
-          },
-          {
-            name: "Admin Users",
-            url: "/admin/users",
-            icon: Shield,
-          },
-        ]
-      : []),
   ];
+
+  const staffProjects = [
+    {
+      name: "Staff Home",
+      url: "/staff",
+      icon: LayoutDashboard,
+    },
+    {
+      name: "Staff Reports",
+      url: "/staff/reports",
+      icon: BarChart3,
+    },
+  ];
+
+  const adminProjects = [
+    {
+      name: "Admin Home",
+      url: "/admin",
+      icon: LayoutDashboard,
+    },
+    {
+      name: "Admin Reports",
+      url: "/admin/reports",
+      icon: BarChart3,
+    },
+    {
+      name: "Admin Logs",
+      url: "/admin/logs",
+      icon: Shield,
+    },
+    {
+      name: "Admin Users",
+      url: "/admin/users",
+      icon: Shield,
+    },
+  ];
+
+  const projects =
+    profile?.role === "admin"
+      ? adminProjects
+      : profile?.role === "staff"
+        ? staffProjects
+        : memberProjects;
   const { toggleSidebar, open } = useSidebar();
 
   const handleLogout = async () => {

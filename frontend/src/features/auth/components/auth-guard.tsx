@@ -4,17 +4,16 @@ import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useAuthStore } from "@/store/auth-store";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { getRoleHomePath } from "../utils/role-navigation";
 
 interface AuthGuardProps {
   children: React.ReactNode;
   allowedRoles?: string[];
-  redirectTo?: string;
 }
 
 export const AuthGuard = ({
   children,
   allowedRoles,
-  redirectTo = "/login",
 }: AuthGuardProps) => {
   const router = useRouter();
   const { accessToken, setAccessToken } = useAuthStore();
@@ -54,9 +53,9 @@ export const AuthGuard = ({
     }
 
     if (!allowedRoles?.includes(profile.role)) {
-      router.replace(redirectTo);
+      router.replace(getRoleHomePath(profile.role));
     }
-  }, [allowedRoles, profile, redirectTo, router, shouldCheckRole]);
+  }, [allowedRoles, profile, router, shouldCheckRole]);
 
   if (isLoading || (shouldCheckRole && isProfileLoading)) {
     return (
