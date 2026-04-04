@@ -28,7 +28,7 @@ func (r *UserRepository) FindAll() ([]model.UserResponse, error) {
 
 func (r *UserRepository) FindByEmail(email string) (*model.Users, error) {
 	var user model.Users
-	if err := r.db.Where("email = ?", email).First(&user).Error; err != nil {
+	if err := r.db.Where("LOWER(email) = ?", email).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil

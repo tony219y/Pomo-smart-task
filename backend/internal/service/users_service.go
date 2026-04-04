@@ -20,16 +20,22 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 }
 
 func (s *UserService) Login(email, password string) (*model.Users, string, string, string) {
+	email = normalizeEmail(email)
+	if len([]byte(password)) > MaxPasswordBytes {
+		return nil, "", "", "Incorrect username or password"
+	}
+
 	user, err := s.repo.FindByEmail(email)
 	if err != nil {
 		return nil, "", "", "Incorrect username or password"
 	}
 	if !user.Active {
-		return nil, "", "", "This account has been deactivated"
+		return nil, "", "", "Incorrect username or password"
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return nil, "", "", "Incorrect username or password"
 	}
+
 	accessToken, refreshToken, _ := s.issueSession(user)
 
 	return user, accessToken, refreshToken, ""
@@ -47,6 +53,19 @@ func (s *UserService) issueSession(user *model.Users) (string, string, string) {
 }
 
 func (s *UserService) Register(email, username, password string) (*model.Users, error) {
+	email = normalizeEmail(email)
+	username = strings.TrimSpace(username)
+
+	if username == "" {
+		return nil, errors.New("username is required")
+	}
+	if len(username) < 3 {
+		return nil, errors.New("username must be at least 3 characters")
+	}
+	if err := ValidatePassword(password); err != nil {
+		return nil, err
+	}
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
@@ -66,13 +85,20 @@ func (s *UserService) Register(email, username, password string) (*model.Users, 
 }
 
 func (s *UserService) LoginWithGoogle(email string) (string, string, string) {
+	email = normalizeEmail(email)
+
 	user, err := s.repo.FindByEmail(email)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", "", "Google login failed"
 		}
 
-		generatedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(email), bcrypt.DefaultCost)
+		randomSecret, randomErr := GenerateRandomSecret()
+		if randomErr != nil {
+			return "", "", "Google login failed"
+		}
+
+		generatedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(randomSecret), bcrypt.DefaultCost)
 		if hashErr != nil {
 			return "", "", "Google login failed"
 		}
@@ -97,7 +123,7 @@ func (s *UserService) LoginWithGoogle(email string) (string, string, string) {
 	}
 
 	if !user.Active {
-		return "", "", "This account has been deactivated"
+		return "", "", "Google login failed"
 	}
 
 	return s.issueSession(user)
