@@ -8,7 +8,7 @@ export default function StaffLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <AuthGuard allowedRoles={["staff", "admin"]} redirectTo="/dashboard">
+    <AuthGuard allowedRoles={["staff", "admin"]}>
       {children}
     </AuthGuard>
   );

@@ -47,7 +47,7 @@ func JWTMiddleware(c fiber.Ctx) error {
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(jwtSecret), nil
-	})
+	}, jwt.WithValidMethods([]string{"HS256"}))
 	if err != nil || !token.Valid {
 		return response.Error(c, fiber.StatusUnauthorized, "invalid token")
 	}

@@ -3,6 +3,7 @@ import { GetProfile, getGoogleLoginUrl, loginUser, registerUser } from "../servi
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { getRoleFromAccessToken, getRoleHomePath } from "../utils/role-navigation";
 
 export const useAuth = () => {
   const router = useRouter();
@@ -15,7 +16,7 @@ export const useAuth = () => {
       throw new Error("Missing token");
     }
     setAccessToken(response.accessToken);
-    router.push("/dashboard");
+    router.push(getRoleHomePath(getRoleFromAccessToken(response.accessToken)));
   };
 
   const GoogleLogin = async () => {

@@ -7,5 +7,5 @@ export default function AdminLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <AuthGuard allowedRoles={["admin"]} redirectTo="/dashboard">{children}</AuthGuard>;
+  return <AuthGuard allowedRoles={["admin"]}>{children}</AuthGuard>;
 }

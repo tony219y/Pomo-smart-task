@@ -14,6 +14,7 @@ import PomodoroTimer from "@/features/dashboard/components/PomodoroTimer";
 import { useMemo, useState } from "react";
 import { useTags } from "@/features/dashboard/hooks/useTags";
 import { Tags } from "@/features/dashboard/types/dashboard.types";
+import { AuthGuard } from "@/features/auth/components/auth-guard";
 
 const DashboardPage = () => {
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
@@ -74,6 +75,7 @@ const DashboardPage = () => {
   }, [tasks, selectedTagId]);
 
   return (
+    <AuthGuard allowedRoles={["member"]}>
     <div className="space-y-5">
       <section className="grid gap-4 md:grid-cols-3">
         <SummaryCard
@@ -236,6 +238,7 @@ const DashboardPage = () => {
         onSave={handleSaveTaskDetail}
       />
     </div>
+    </AuthGuard>
   );
 };
 

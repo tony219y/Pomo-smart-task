@@ -3,6 +3,22 @@ import axios, { type InternalAxiosRequestConfig } from "axios";
 
 const base_api = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+function isAllowedBackendURL(url?: string) {
+  if (!url) {
+    return false;
+  }
+
+  return (
+    url.startsWith("https://") ||
+    url.startsWith("http://localhost") ||
+    url.startsWith("http://127.0.0.1")
+  );
+}
+
+if (!isAllowedBackendURL(base_api)) {
+  throw new Error("NEXT_PUBLIC_BACKEND_URL must use https:// outside localhost");
+}
+
 type RetriableRequest = InternalAxiosRequestConfig & {
   _retry?: boolean;
 };
