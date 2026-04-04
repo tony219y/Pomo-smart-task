@@ -12,7 +12,18 @@ import (
 func registerAuthRoutes(v1 fiber.Router, userHandler *handler.UserHandler) {
 	auth := v1.Group("/auth")
 	auth.Post("/register", userHandler.CreateUser)
-	auth.Post("/login", userHandler.UserLogin)
+	auth.Post("/login", limiter.New(limiter.Config{
+		Max:        20,
+		Expiration: time.Minute,
+		KeyGenerator: func(c fiber.Ctx) string {
+			return c.IP()
+		},
+		LimitReached: func(c fiber.Ctx) error {
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"error": "too many login attempts, please try again later",
+			})
+		},
+	}), userHandler.UserLogin)
 	auth.Post("/refresh", limiter.New(limiter.Config{
 		Max:        10,
 		Expiration: time.Minute,
