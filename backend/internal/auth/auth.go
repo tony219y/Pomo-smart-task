@@ -2,10 +2,9 @@ package auth
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 
 	"github.com/tony219y/pomo-smart-task-api/internal/model"
@@ -27,32 +26,37 @@ func ConfigGoogle() *oauth2.Config {
 	return conf
 }
 
-func GetEmail(token string) string {
-	reqURL, err := url.Parse("https://www.googleapis.com/oauth2/v1/userinfo")
+func GetEmail(token string) (string, error) {
+	req, err := http.NewRequest(http.MethodGet, "https://www.googleapis.com/oauth2/v1/userinfo", nil)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	ptoken := fmt.Sprintf("Bearer %s", token)
-	res := &http.Request{
-		Method: "GET",
-		URL:    reqURL,
-		Header: map[string][]string{
-			"Authorization": {ptoken},
-		},
-	}
-	req, err := http.DefaultClient.Do(res)
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	defer req.Body.Close()
-	body, err := io.ReadAll(req.Body)
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return "", errors.New("failed to load google user info")
+	}
+
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
+
 	var data model.GoogleResponse
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		panic(err)
+	if err := json.Unmarshal(body, &data); err != nil {
+		return "", err
 	}
-	return data.Email
+
+	if data.Email == "" {
+		return "", errors.New("google account email not found")
+	}
+
+	return data.Email, nil
 }

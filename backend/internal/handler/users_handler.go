@@ -232,7 +232,11 @@ func (h *UserHandler) Callback(c fiber.Ctx) error {
 		return response.Error(c, fiber.StatusBadRequest, "failed to exchange google token")
 	}
 
-	email := auth.GetEmail(token.AccessToken)
+	email, err := auth.GetEmail(token.AccessToken)
+	if err != nil {
+		return response.Error(c, fiber.StatusBadRequest, "failed to load google user info")
+	}
+
 	accessToken, refreshToken, errMsg := h.service.LoginWithGoogle(email)
 	if errMsg != "" {
 		return response.Error(c, fiber.StatusBadRequest, errMsg)
