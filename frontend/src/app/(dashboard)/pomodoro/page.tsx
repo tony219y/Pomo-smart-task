@@ -3,7 +3,7 @@ import PomodoroTimer from "@/features/dashboard/components/PomodoroTimer";
 import { usePomodoro } from "@/features/dashboard/hooks/usePomodoro";
 import { AuthGuard } from "@/features/auth/components/auth-guard";
 
-const page = () => {
+export default function PomodoroPage() {
   const {
     mode,
     isRunning,
@@ -15,21 +15,19 @@ const page = () => {
   } = usePomodoro();
   return (
     <AuthGuard allowedRoles={["member"]}>
-    <div className="flex w-full h-full items-center justify-center">
-      <div className="lg:w-4xl">
-        <PomodoroTimer
-          handleChangeMode={handleChangeMode}
-          mode={mode}
-          timeDisplay={timeDisplay}
-          handleToggleTimer={handleToggleTimer}
-          isRunning={isRunning}
-          handleSkip={handleSkip}
-          sessionCount={sessionCount}
-        />
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="lg:w-4xl">
+          <PomodoroTimer
+            handleChangeMode={handleChangeMode}
+            mode={mode}
+            timeDisplay={timeDisplay}
+            handleToggleTimer={handleToggleTimer}
+            isRunning={isRunning}
+            handleSkip={handleSkip}
+            sessionCount={sessionCount}
+          />
+        </div>
       </div>
-    </div>
     </AuthGuard>
   );
-};
-
-export default page;
+}

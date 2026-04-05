@@ -1,6 +1,7 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import Image from 'next/image';
 import { useState } from 'react'
 import { useForm } from 'react-hook-form';
 import { LoginInput, loginSchema } from '../schemas/auth.schema';
@@ -74,7 +75,7 @@ const LoginForm = () => {
         className="w-full bg-white text-black hover:bg-white/80"
         onClick={GoogleLogin}
       >
-        <img src="google.png" alt="google.png" className="w-5" />
+        <Image src="/google.png" alt="Google" width={20} height={20} />
         {isLoading ? "Signing in..." : "Continue with google"}
       </Button>
     </>
