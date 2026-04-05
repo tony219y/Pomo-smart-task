@@ -96,12 +96,11 @@ const AppSidebar = () => {
     },
   ];
 
-  const projects =
-    profile?.role === "admin"
-      ? adminProjects
-      : profile?.role === "staff"
-        ? staffProjects
-        : memberProjects;
+  const projects = (() => {
+    if (profile?.role === "admin") return adminProjects;
+    if (profile?.role === "staff") return staffProjects;
+    return memberProjects;
+  })();
   const { toggleSidebar, open } = useSidebar();
 
   const handleLogout = async () => {

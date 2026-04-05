@@ -11,6 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const IncorrectCredentials = "Incorrect username or password"
+
 type UserService struct {
 	repo *repository.UserRepository
 }
@@ -20,20 +22,20 @@ func NewUserService(repo *repository.UserRepository) *UserService {
 }
 
 func (s *UserService) Login(email, password string) (*model.Users, string, string, string) {
-	email = normalizeEmail(email)
+	email = normalizeEmaiIncorrectCredentials
 	if len([]byte(password)) > MaxPasswordBytes {
-		return nil, "", "", "Incorrect username or password"
+		return nil, "", "", IncorrectCredentials
 	}
 
-	user, err := s.repo.FindByEmail(email)
+	user, err := s.repo.FIncorrectCredentials
 	if err != nil {
-		return nil, "", "", "Incorrect username or password"
+		return nil, "", "", IncorrectCredentials
 	}
 	if !user.Active {
-		return nil, "", "", "Incorrect username or password"
+		return nil, "", "", IncorrectCredentials
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return nil, "", "", "Incorrect username or password"
+		return nil, "", "", IncorrectCredentials
 	}
 
 	accessToken, refreshToken, _ := s.issueSession(user)

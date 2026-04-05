@@ -86,12 +86,10 @@ const StaffReportsPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {isLoading ? (
-              <p className="text-sm text-muted-foreground">Loading staff report...</p>
-            ) : summary.recentTasks.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No task activity yet.</p>
-            ) : (
-              summary.recentTasks.map((task) => (
+            {(() => {
+              if (isLoading) return <p className="text-sm text-muted-foreground">Loading staff report...</p>;
+              if (summary.recentTasks.length === 0) return <p className="text-sm text-muted-foreground">No task activity yet.</p>;
+              return summary.recentTasks.map((task: any) => (
                 <div
                   key={task.id}
                   className="rounded-xl border border-border bg-background px-4 py-4"
@@ -108,8 +106,8 @@ const StaffReportsPage = () => {
                     </span>
                   </div>
                 </div>
-              ))
-            )}
+              ));
+            })()}
           </CardContent>
         </Card>
       </section>
