@@ -9,14 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useAuth } from '../hooks/use-auth';
-
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "Something went wrong";
-}
+import { getErrorMessage } from '../utils/get-error-message';
 
 const LoginForm = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -35,7 +28,7 @@ const LoginForm = () => {
       await userLogin(payload)
       reset();
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error));
+      toast.error(getErrorMessage(error, "Login failed"));
     } finally {
       setIsLoading(false);
     }

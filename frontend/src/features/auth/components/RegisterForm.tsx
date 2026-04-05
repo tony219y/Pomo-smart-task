@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import { useForm } from 'react-hook-form'
 import Link from "next/link";
+import { toast } from "sonner";
 import { RegisterInput, registerSchema } from "../schemas/auth.schema";
 import { useAuth } from "../hooks/use-auth";
+import { getErrorMessage } from "../utils/get-error-message";
 
 function getPasswordStrength(password: string) {
   if (password.length === 0) return "";
@@ -20,14 +22,6 @@ function getPasswordStrengthClass(strength: string) {
   if (strength === "Too short") return "text-red-500";
   if (strength === "Fair") return "text-yellow-500";
   return "text-green-600";
-}
-
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "Something went wrong";
 }
 
 const RegisterForm = () => {
@@ -50,7 +44,7 @@ const RegisterForm = () => {
       await CreateUser(payload)
       reset();
     } catch (error: unknown) {
-      console.error(getErrorMessage(error));
+      toast.error(getErrorMessage(error, "Register failed"));
     } finally {
       setIsLoading(false);
     }
